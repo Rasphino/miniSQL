@@ -2,6 +2,7 @@
 // Created by rasp on 19-6-5.
 //
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -9,7 +10,14 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#ifdef UNIX
 #include <unistd.h>
+#endif
+
+#ifdef WIN32
+#include <io.h>
+#endif
 
 #include "BufferManager.h"
 
