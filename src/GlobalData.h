@@ -39,4 +39,18 @@ namespace CM {
 
 }
 
+namespace BM {
+    const int BUF_NUM = 2; // buffer数量
+
+    typedef struct buffer_ {
+        uint32_t beginOffset; // 该buffer包含多个tuple的最低offset
+        uint32_t endOffset;
+        char buf[BLOCK_SIZE];
+        uint8_t accessTimes; // 访问次数
+        bool isModified;     // 数据是否被修改过
+        bool isPinned;       // buffer是否被锁定
+        bool inUse;          // buffer是否正在被使用
+    } buffer;
+}
+
 #endif // DB_MINISQL_GLOBALDATA_H

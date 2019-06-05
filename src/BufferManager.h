@@ -6,6 +6,7 @@
 #define DB_MINISQL_BUFFERMANAGER_H
 
 #include "CatalogManager.h"
+#include "GlobalData.h"
 #include <string>
 
 namespace BM {
@@ -17,7 +18,9 @@ namespace BM {
         void* read(std::string dbName, uint32_t offset);
 
     private:
-        char** buf;
+        buffer* buf;
+        CM::table* tables[BUF_NUM];
+        CM::CatalogManager cm;
     };
 }
 
