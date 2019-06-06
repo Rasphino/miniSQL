@@ -17,8 +17,11 @@ namespace CM {
         CatalogManager();
         ~CatalogManager();
 
-        table& getTable(std::string name);
+        table& get_table(std::string name);
         void save();
+
+        bool create_table(table& t);
+        bool create_index(index& t);
 
     private:
         std::vector<table> tables;

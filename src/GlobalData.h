@@ -17,9 +17,9 @@ enum DataType { INT, CHAR_N, FLOAT };
 
 namespace CM {
     typedef struct field_ {
-        std::string name;
-        DataType type;
-        int N = -1;
+        std::string name; // field的名称
+        DataType type;    // 该field的类型
+        int N = -1;       // 该field类型所占的空间
         bool isUnique = false;
     } field;
 
@@ -32,9 +32,9 @@ namespace CM {
     } table;
 
     typedef struct index_ {
-        std::string name;       // 索引名
-        std::string onableName; // 索引所在的表
-        std::string onFieldID;  // 单值索引所在的field序号（从0开始）
+        std::string name;        // 索引名
+        std::string onTableName; // 索引所在的表
+        int onFieldID;           // 单值索引所在的field序号（从0开始）
     } index;
 
 }

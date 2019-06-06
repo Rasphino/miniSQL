@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <tuple>
 
 #include "BufferManager.h"
 #include "CatalogManager.h"
@@ -10,7 +11,7 @@
 
 void write() {
     CM::CatalogManager cm;
-    CM::table& t = cm.getTable("book");
+    CM::table& t = cm.get_table("book");
 
     Records data;
     data.push_back({std::to_string(1), "book1", "author1", std::to_string(12.4f)});
@@ -81,8 +82,9 @@ int main() {
     write();
 
     BM::BufferManager bm;
+    CM::CatalogManager cm;
 
-    for (int i = 30; i < 33; ++i) {
+    for (int i = 0; i < 30; ++i) {
         void* data = bm.read("book", i);
         int bookid = *static_cast<int*>(data);
         std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 256));
@@ -114,15 +116,22 @@ int main() {
     data.push_back({std::to_string(51), "cccsrsdgstykrsk", "AAAAAA", std::to_string(1239.0f)});
     data.push_back({std::to_string(52), "cccsrsdgstykrsk", "AAAAAA", std::to_string(4.0f)});
     data.push_back({std::to_string(53), "cccsrsdgstykrsk", "AAAAAA", std::to_string(5.0f)});
-    data.push_back({std::to_string(54), "cccsrsdgstykrsk", "AAAAAA", std::to_string(1239.0f)});
-    data.push_back({std::to_string(55), "cccsrsdgstykrsk", "AAAAAA", std::to_string(6.0f)});
 
+    uint32_t offset;
     for (const auto& r : data) {
-        idx = bm.append("book", r);
+        std::tie(offset, idx) = bm.append_record("book", r);
+        std::clog << offset << std::endl;
     }
     bm.save(idx);
 
-    for (int i = 33; i < 55; ++i) {
+    data.clear();
+    data.push_back({std::to_string(54), "cccsrsdgstykrsk", "AAAAAA", std::to_string(1239.0f)});
+    data.push_back({std::to_string(55), "cccsrsdgstykrsk", "AAAAAA", std::to_string(6.0f)});
+    std::tie(offset, idx) = bm.append_record("book", data[0], 0);
+    std::clog << offset << std::endl;
+    bm.save(idx);
+
+    for (int i = 0; i < 2; ++i) {
         void* data = bm.read("book", i);
         int bookid = *static_cast<int*>(data);
         std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 256));
@@ -131,6 +140,27 @@ int main() {
         float price = *(reinterpret_cast<float*>(static_cast<char*>(data) + 516));
         std::cout << bookid << " " << title << " " << author << " " << price << std::endl;
     }
+
+    CM::table t;
+    t.name = "test";
+    t.primaryKeyID = 0;
+    t.fields.push_back({"id", DataType::INT, 4, true});
+    t.NOF = 1;
+    t.sizePerTuple = 4;
+    if (cm.create_table(t)) {
+        std::clog << "create table " << t.name << " successful!" << std::endl;
+    }
+    std::cout << t.name << std::endl;
+
+    CM::index id;
+    id.name = "testIndex";
+    id.onTableName = "test";
+    id.onFieldID = 0;
+    if (cm.create_index(id)) {
+        std::clog << "create index " << id.name << " successful!" << std::endl;
+    }
+
+    cm.save();
 
     return 0;
 }
