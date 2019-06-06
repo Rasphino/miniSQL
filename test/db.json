@@ -32,7 +32,10 @@
         ]
       ],
       "NOF": 4,
-      "primaryKeyID": 0
+      "primaryKeyID": 0,
+      "uniqueIDs": [
+        0
+      ]
     },
     "librarycard": {
       "field": [
@@ -59,6 +62,7 @@
       "NOF": 4,
       "primaryKeyID": 0,
       "uniqueIDs": [
+        0,
         2
       ]
     }

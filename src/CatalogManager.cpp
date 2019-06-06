@@ -80,7 +80,7 @@ CM::CatalogManager::CatalogManager() {
     while (itrJ != d["index"].MemberEnd()) {
         for (const auto& item : itrJ->value.GetObject()) {
             if (strncmp(item.name.GetString(), "onTable", 7) == 0) {
-                itrI->onableName = item.value.GetString();
+                itrI->onTableName = item.value.GetString();
             } else if (strncmp(item.name.GetString(), "onFieldID", 9) == 0) {
                 itrI->onFieldID = item.value.GetInt();
             }
@@ -89,9 +89,9 @@ CM::CatalogManager::CatalogManager() {
     }
 }
 
-CM::CatalogManager::~CatalogManager() { save(); }
+CM::CatalogManager::~CatalogManager() {}
 
-CM::table& CM::CatalogManager::getTable(std::string name) {
+CM::table& CM::CatalogManager::get_table(std::string name) {
     for (auto& t : tables) {
         if (t.name == name) {
             return t;
@@ -99,9 +99,99 @@ CM::table& CM::CatalogManager::getTable(std::string name) {
     }
     throw(std::runtime_error("CM getTable: table name not found!"));
 }
+
 void CM::CatalogManager::save() {
+    StringBuffer buffer;
+    Writer<StringBuffer> writer_(buffer);
+    d.Accept(writer_);
+    std::clog << buffer.GetString() << std::endl;
+
     std::ofstream ofs("db.json");
     OStreamWrapper osw(ofs);
     Writer<OStreamWrapper> writer(osw);
     d.Accept(writer);
+}
+
+bool CM::CatalogManager::create_table(CM::table& t) {
+    // 确保主键是unique的
+    t.fields[t.primaryKeyID].isUnique = true;
+
+    for (const auto& _t : tables) {
+        if (_t.name == t.name) return false;
+    }
+
+    tables.push_back(t);
+
+    auto itr = d["database"].MemberBegin();
+    auto& allocator = d.GetAllocator();
+    Value& _tables = (++itr)->value;
+    _tables.PushBack(Value().SetString(StringRef(t.name.c_str())), allocator);
+
+    Value& _table = d["table"];
+    Value _t(kObjectType);
+    Value _f(kArrayType);
+    for (const auto& f : t.fields) {
+        Value _tmp(kArrayType);
+        _tmp.PushBack(StringRef(f.name.c_str()), allocator);
+        switch (f.type) {
+            case DataType::INT: {
+                _tmp.PushBack(StringRef("INT"), allocator);
+                break;
+            }
+            case DataType::CHAR_N: {
+                _tmp.PushBack(StringRef("CHAR_N"), allocator);
+                break;
+            }
+            case DataType::FLOAT: {
+                _tmp.PushBack(StringRef("FLOAT"), allocator);
+                break;
+            }
+        }
+
+        _f.PushBack(_tmp, allocator);
+    }
+    Value _u(kArrayType);
+    for (int i = 0; i < t.NOF; ++i) {
+        if (t.fields[i].isUnique) {
+            _u.PushBack(i, allocator);
+        }
+    }
+    _t.AddMember("field", _f, allocator);
+    _t.AddMember("NOF", t.NOF, allocator);
+    _t.AddMember("primaryKeyID", t.primaryKeyID, allocator);
+    _t.AddMember("uniqueIDs", _u, allocator);
+    _table.AddMember(StringRef(t.name.c_str()), _t, allocator);
+
+    return true;
+}
+
+bool CM::CatalogManager::create_index(CM::index& t) {
+    // 检查index所在的table是否存在
+    bool hasTable = false;
+    for (const auto& item : tables) {
+        if (item.name == t.onTableName) {
+            hasTable = true;
+            break;
+        }
+    }
+    if (!hasTable) return false;
+
+    for (const auto& _t : indices) {
+        if (_t.name == t.name) return false;
+    }
+
+    indices.push_back(t);
+
+    auto itr = d["database"].MemberBegin();
+    auto& allocator = d.GetAllocator();
+    ++itr;
+    Value& _tables = (++itr)->value;
+    _tables.PushBack(Value().SetString(StringRef(t.name.c_str())), allocator);
+
+    Value& _index = d["index"];
+    Value _i(kObjectType);
+    _i.AddMember(StringRef("onTable"), StringRef(t.onTableName.c_str()), allocator);
+    _i.AddMember(StringRef("onFieldID"), t.onFieldID, allocator);
+    _index.AddMember(StringRef(t.name.c_str()), _i, allocator);
+    return true;
 }
