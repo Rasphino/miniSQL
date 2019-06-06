@@ -8,6 +8,9 @@
 #include "GlobalData.h"
 #include <vector>
 
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+
 namespace CM {
     class CatalogManager {
     public:
@@ -15,10 +18,12 @@ namespace CM {
         ~CatalogManager();
 
         table& getTable(std::string name);
+        void save();
 
     private:
         std::vector<table> tables;
         std::vector<index> indices;
+        rapidjson::Document d;
     };
 
 }

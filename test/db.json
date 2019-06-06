@@ -1,0 +1,72 @@
+{
+  "database": {
+    "name": "library",
+    "tables": [
+      "book",
+      "librarycard"
+    ],
+    "indices": [
+      "booktitle"
+    ]
+  },
+  "table": {
+    "book": {
+      "field": [
+        [
+          "bookid",
+          "INT"
+        ],
+        [
+          "title",
+          "CHAR_N",
+          256
+        ],
+        [
+          "author",
+          "CHAR_N",
+          256
+        ],
+        [
+          "price",
+          "FLOAT"
+        ]
+      ],
+      "NOF": 4,
+      "primaryKeyID": 0
+    },
+    "librarycard": {
+      "field": [
+        [
+          "cardno",
+          "INT"
+        ],
+        [
+          "name",
+          "CHAR_N",
+          20
+        ],
+        [
+          "somethingUnique",
+          "CHAR_N",
+          20
+        ],
+        [
+          "cardtype",
+          "CHAR_N",
+          10
+        ]
+      ],
+      "NOF": 4,
+      "primaryKeyID": 0,
+      "uniqueIDs": [
+        2
+      ]
+    }
+  },
+  "index": {
+    "booktitle": {
+      "onTable": "book",
+      "onFieldID": 1
+    }
+  }
+}
