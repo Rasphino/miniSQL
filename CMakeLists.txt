@@ -16,6 +16,7 @@ endif ()
 
 find_package(RapidJSON CONFIG REQUIRED)
 
-add_executable(DB_miniSQL src/main.cpp src/GlobalData.h src/BufferManager.cpp src/BufferManager.h src/CatalogManager.cpp src/CatalogManager.h)
+add_executable(DB_miniSQL src/main.cpp src/GlobalData.h src/BufferManager.cpp src/BufferManager.h src/CatalogManager.cpp src/CatalogManager.h
+src/IndexManager.h src/IndexManager.cpp src/Bplus.h)
 
 target_include_directories(DB_miniSQL PRIVATE ${RAPIDJSON_INCLUDE_DIRS})
