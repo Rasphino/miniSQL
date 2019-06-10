@@ -21,7 +21,7 @@
 
 #include "BufferManager.h"
 
-void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
+void* BM::BufferManager::read(std::string dbName, uint32_t offset, int& idx) {
     // 若buffer中已经缓存过数据，则直接返回buffer中的数据
     for (int i = 0; i < BUF_NUM; ++i) {
         if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == dbName && buf[i].beginOffset <= offset &&
@@ -30,7 +30,8 @@ void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
 #ifndef NDEBUG
             std::clog << offset << " from buf" << std::endl;
 #endif
-            return buf[i].buf + tables[i]->sizePerTuple * (offset - buf[i].beginOffset);
+            idx = i;
+            return buf[i].buf + (tables[i]->sizePerTuple + RECORD_TAIL_SIZE) * (offset - buf[i].beginOffset);
         }
     }
 
@@ -39,7 +40,7 @@ void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
     // 获取文件大小，以免endOffset越界
     uint32_t size = lseek(fd, 0, SEEK_END);
 
-    if (offset >= size / t.sizePerTuple) {
+    if (offset >= size / (t.sizePerTuple + RECORD_TAIL_SIZE)) {
         throw std::out_of_range("CM read: offset out of range!");
     }
 
@@ -48,16 +49,22 @@ void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
     tables[i] = &t;
     buf[i].inUse = true;
     buf[i].beginOffset = offset;
-    buf[i].endOffset = std::min(offset + BLOCK_SIZE / t.sizePerTuple, size / t.sizePerTuple);
+    buf[i].endOffset =
+        std::min(offset + BLOCK_SIZE / (t.sizePerTuple + RECORD_TAIL_SIZE), size / (t.sizePerTuple + RECORD_TAIL_SIZE));
 #ifndef NDEBUG
     std::clog << "beginOffset: " << buf[i].beginOffset << "; endOffset: " << buf[i].endOffset << std::endl;
 #endif
 
-    uint64_t totalOffet = t.sizePerTuple * offset;
+    uint64_t totalOffet = (t.sizePerTuple + RECORD_TAIL_SIZE) * offset;
     lseek(fd, totalOffet, SEEK_SET);
     ::read(fd, buf[i].buf, BLOCK_SIZE);
     close(fd);
     return buf[i].buf;
+}
+
+void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
+    int idx;
+    return read(dbName, offset, idx);
 }
 
 // 查找空余的buffer
@@ -109,9 +116,10 @@ void BM::BufferManager::save(size_t idx) {
     }
 
     int fd = open(tables[idx]->name.c_str(), O_WRONLY, S_IWRITE | S_IREAD);
-    lseek(fd, buf[idx].beginOffset * tables[idx]->sizePerTuple, SEEK_SET);
+    lseek(fd, buf[idx].beginOffset * (tables[idx]->sizePerTuple + RECORD_TAIL_SIZE), SEEK_SET);
     // 写回时不能直接写BLOCK_SIZE，因为buffer的末尾部分并不完全
-    write(fd, buf[idx].buf, (buf[idx].endOffset - buf[idx].beginOffset) * tables[idx]->sizePerTuple);
+    write(
+        fd, buf[idx].buf, (buf[idx].endOffset - buf[idx].beginOffset) * (tables[idx]->sizePerTuple + RECORD_TAIL_SIZE));
     close(fd);
 
     buf[idx].accessTimes = 0;
@@ -122,7 +130,7 @@ void BM::BufferManager::save(size_t idx) {
 void BM::BufferManager::set_modified(size_t idx) { buf[idx].isModified = true; }
 
 std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, const Record& row, uint32_t offset) {
-    if (offset != -1) {
+    if (offset != UINT32_MAX) {
         // 在buffer中寻找是否已有缓存
         for (int i = 0; i < BUF_NUM; ++i) {
             if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == dbName && buf[i].beginOffset <= offset &&
@@ -133,7 +141,7 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
 #endif
                 buf[i].inUse = buf[i].isModified = true;
                 // p为指向offset的指针
-                char* p = buf[i].buf + tables[i]->sizePerTuple * (offset - buf[i].beginOffset);
+                char* p = buf[i].buf + (tables[i]->sizePerTuple + RECORD_TAIL_SIZE) * (offset - buf[i].beginOffset);
                 copy_to_buffer(row, *tables[i], p);
                 return std::make_pair(offset, i);
             }
@@ -144,7 +152,7 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
         // 获取文件大小，以免endOffset越界
         uint32_t size = lseek(fd, 0, SEEK_END);
 
-        if (offset >= size / t.sizePerTuple) {
+        if (offset >= size / (t.sizePerTuple + RECORD_TAIL_SIZE)) {
             throw std::out_of_range("CM read: offset out of range!");
         }
 
@@ -153,12 +161,13 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
         tables[i] = &t;
         buf[i].inUse = buf[i].isModified = true;
         buf[i].beginOffset = offset;
-        buf[i].endOffset = std::min(offset + BLOCK_SIZE / t.sizePerTuple, size / t.sizePerTuple);
+        buf[i].endOffset = std::min(offset + BLOCK_SIZE / (t.sizePerTuple + RECORD_TAIL_SIZE),
+                                    size / (t.sizePerTuple + RECORD_TAIL_SIZE));
 #ifndef NDEBUG
         std::clog << "replace: beginOffset: " << buf[i].beginOffset << "; endOffset: " << buf[i].endOffset << std::endl;
 #endif
 
-        uint64_t totalOffet = t.sizePerTuple * offset;
+        uint64_t totalOffet = (t.sizePerTuple + RECORD_TAIL_SIZE) * offset;
         lseek(fd, totalOffet, SEEK_SET);
         ::read(fd, buf[i].buf, BLOCK_SIZE);
         close(fd);
@@ -169,7 +178,7 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
         CM::table& t = cm.get_table(dbName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
         uint32_t size = lseek(fd, 0, SEEK_END);
-        uint32_t _endOffset = size / t.sizePerTuple;
+        uint32_t _endOffset = size / (t.sizePerTuple + RECORD_TAIL_SIZE);
 
         // 若buffer中已经有缓存数据，则直接在buffer中继续添加数据
         for (int i = 0; i < BUF_NUM; ++i) {
@@ -177,11 +186,12 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
 #ifndef NDEBUG
                 std::clog << "append data to buf" << std::endl;
 #endif
-                char* p = buf[i].buf + ((buf[i].endOffset++ - buf[i].beginOffset) * t.sizePerTuple);
+                char* p =
+                    buf[i].buf + ((buf[i].endOffset++ - buf[i].beginOffset) * (t.sizePerTuple + RECORD_TAIL_SIZE));
                 copy_to_buffer(row, t, p);
 
                 // buffer写满，写回磁盘
-                if (buf[i].endOffset - buf[i].beginOffset >= BLOCK_SIZE / t.sizePerTuple) {
+                if (buf[i].endOffset - buf[i].beginOffset >= BLOCK_SIZE / (t.sizePerTuple + RECORD_TAIL_SIZE)) {
 #ifndef NDEBUG
                     std::clog << "sync data to disk" << std::endl;
 #endif
@@ -196,15 +206,15 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
 #ifndef NDEBUG
         std::clog << "write to new offset: " << _endOffset << std::endl;
 #endif
-        int idx = get_free_buffer();
-        buf[idx].accessTimes = 0;
-        buf[idx].inUse = buf[idx].isModified = true;
-        tables[idx] = &t;
-        buf[idx].beginOffset = _endOffset;
-        buf[idx].endOffset = buf[idx].beginOffset + 1;
-        char* p = buf[idx].buf;
+        int i = get_free_buffer();
+        buf[i].accessTimes = 0;
+        buf[i].inUse = buf[i].isModified = true;
+        tables[i] = &t;
+        buf[i].beginOffset = _endOffset;
+        buf[i].endOffset = buf[i].beginOffset + 1;
+        char* p = buf[i].buf;
         copy_to_buffer(row, t, p);
-        return std::make_pair(_endOffset, idx);
+        return std::make_pair(_endOffset, i);
     }
 }
 
@@ -233,6 +243,16 @@ void BM::BufferManager::copy_to_buffer(const Record& row, const CM::table& t, ch
             }
         }
     }
+    int _ = 1;
+    memcpy(p, reinterpret_cast<const char*>(&_), RECORD_TAIL_SIZE);
 }
 
-void* BM::BufferManager::delete_record(std::string dbName, uint32_t offset) { return read(dbName, offset); }
+void* BM::BufferManager::delete_record(std::string dbName, uint32_t offset) {
+    int idx;
+    void* p = read(dbName, offset, idx);
+    int _ = 0;
+    char* t = reinterpret_cast<char*>(p) + tables[idx]->sizePerTuple;
+    memcpy(t, reinterpret_cast<const char*>(&_), RECORD_TAIL_SIZE);
+    set_modified(idx);
+    return p;
+}

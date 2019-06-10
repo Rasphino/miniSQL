@@ -20,14 +20,14 @@ CM::CatalogManager::CatalogManager() {
     for (const auto& m : d["database"].GetObject()) {
         if (strncmp(m.name.GetString(), "tables", 5) == 0) {
             for (const auto& v : m.value.GetArray()) {
-                std::cout << v.GetString() << std::endl;
+                //                std::cout << v.GetString() << std::endl;
                 table tmp;
                 tmp.name = v.GetString();
                 tables.push_back(tmp);
             }
         } else if (strncmp(m.name.GetString(), "indices", 7) == 0) {
             for (const auto& v : m.value.GetArray()) {
-                std::cout << v.GetString() << std::endl;
+                //                std::cout << v.GetString() << std::endl;
                 index tmp;
                 tmp.name = v.GetString();
                 indices.push_back(tmp);

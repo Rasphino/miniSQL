@@ -16,26 +16,26 @@ const int BLOCK_SIZE = 8192;
 enum DataType { INT, CHAR_N, FLOAT };
 
 namespace CM {
-    typedef struct field_ {
+    struct field {
         std::string name; // field的名称
         DataType type;    // 该field的类型
         int N = -1;       // 该field类型所占的空间
         bool isUnique = false;
-    } field;
+    };
 
-    typedef struct table_ {
+    struct table {
         std::string name;      // 表名
         uint32_t NOF;          // field的数量
         uint32_t primaryKeyID; // 主键所在field的序号（从0开始）
         uint32_t sizePerTuple; // 每一个元组所占的空间（bytes）
         std::vector<field> fields;
-    } table;
+    };
 
-    typedef struct index_ {
+    struct index {
         std::string name;        // 索引名
         std::string onTableName; // 索引所在的表
         int onFieldID;           // 单值索引所在的field序号（从0开始）
-    } index;
+    };
 
 }
 
