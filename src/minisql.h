@@ -26,9 +26,4 @@ private:
     //    static IM::IndexManager* indexManager;
 };
 
-BM::BufferManager* MiniSQL::bufferManager = nullptr;
-CM::CatalogManager* MiniSQL::catalogManager = nullptr;
-// RM::RecordManager* MiniSQL::recordManager = nullptr;
-// IM::IndexManager* MiniSQL::indexManager = nullptr;
-
 #endif // DB_MINISQL_MINISQL_H
