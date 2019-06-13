@@ -21,10 +21,10 @@
 
 #include "BufferManager.h"
 
-void* BM::BufferManager::read(std::string dbName, uint32_t offset, int& idx) {
+void* BM::BufferManager::read(std::string tableName, uint32_t offset, int& idx) {
     // 若buffer中已经缓存过数据，则直接返回buffer中的数据
     for (int i = 0; i < BUF_NUM; ++i) {
-        if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == dbName && buf[i].beginOffset <= offset &&
+        if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == tableName && buf[i].beginOffset <= offset &&
             buf[i].endOffset > offset) {
             buf[i].accessTimes += 1;
 #ifndef NDEBUG
@@ -35,7 +35,7 @@ void* BM::BufferManager::read(std::string dbName, uint32_t offset, int& idx) {
         }
     }
 
-    CM::table& t = cm.get_table(dbName);
+    CM::table& t = cm.get_table(tableName);
     int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
     // 获取文件大小，以免endOffset越界
     uint32_t size = lseek(fd, 0, SEEK_END);
@@ -62,9 +62,9 @@ void* BM::BufferManager::read(std::string dbName, uint32_t offset, int& idx) {
     return buf[i].buf;
 }
 
-void* BM::BufferManager::read(std::string dbName, uint32_t offset) {
+void* BM::BufferManager::read(std::string tableName, uint32_t offset) {
     int idx;
-    return read(dbName, offset, idx);
+    return read(tableName, offset, idx);
 }
 
 // 查找空余的buffer
@@ -129,11 +129,11 @@ void BM::BufferManager::save(size_t idx) {
 
 void BM::BufferManager::set_modified(size_t idx) { buf[idx].isModified = true; }
 
-std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, const Record& row, uint32_t offset) {
+std::pair<uint32_t, int> BM::BufferManager::append_record(std::string tableName, const Record& row, uint32_t offset) {
     if (offset != UINT32_MAX) {
         // 在buffer中寻找是否已有缓存
         for (int i = 0; i < BUF_NUM; ++i) {
-            if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == dbName && buf[i].beginOffset <= offset &&
+            if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == tableName && buf[i].beginOffset <= offset &&
                 buf[i].endOffset > offset) {
                 buf[i].accessTimes += 1;
 #ifndef NDEBUG
@@ -147,7 +147,7 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
             }
         }
 
-        CM::table& t = cm.get_table(dbName);
+        CM::table& t = cm.get_table(tableName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
         // 获取文件大小，以免endOffset越界
         uint32_t size = lseek(fd, 0, SEEK_END);
@@ -175,14 +175,15 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string dbName, co
         return std::make_pair(offset, i);
 
     } else {
-        CM::table& t = cm.get_table(dbName);
+        CM::table& t = cm.get_table(tableName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
         uint32_t size = lseek(fd, 0, SEEK_END);
         uint32_t _endOffset = size / (t.sizePerTuple + RECORD_TAIL_SIZE);
 
         // 若buffer中已经有缓存数据，则直接在buffer中继续添加数据
         for (int i = 0; i < BUF_NUM; ++i) {
-            if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == dbName && buf[i].beginOffset == _endOffset) {
+            if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == tableName &&
+                buf[i].beginOffset == _endOffset) {
 #ifndef NDEBUG
                 std::clog << "append data to buf" << std::endl;
 #endif
@@ -247,12 +248,19 @@ void BM::BufferManager::copy_to_buffer(const Record& row, const CM::table& t, ch
     memcpy(p, reinterpret_cast<const char*>(&_), RECORD_TAIL_SIZE);
 }
 
-void* BM::BufferManager::delete_record(std::string dbName, uint32_t offset) {
+void* BM::BufferManager::delete_record(std::string tableName, uint32_t offset) {
     int idx;
-    void* p = read(dbName, offset, idx);
+    void* p = read(tableName, offset, idx);
     int _ = 0;
     char* t = reinterpret_cast<char*>(p) + tables[idx]->sizePerTuple;
     memcpy(t, reinterpret_cast<const char*>(&_), RECORD_TAIL_SIZE);
     set_modified(idx);
     return p;
+}
+
+bool BM::BufferManager::create_table(std::string& tableName) {
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    int fd = open(tableName.c_str(), O_CREAT, mode);
+    close(fd);
+    return fd != -1;
 }
