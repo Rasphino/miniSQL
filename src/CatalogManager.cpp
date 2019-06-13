@@ -140,6 +140,7 @@ bool CM::CatalogManager::create_table(CM::table& t) {
             }
             case DataType::CHAR_N: {
                 _tmp.PushBack(StringRef("CHAR_N"), allocator);
+                _tmp.PushBack(f.N, allocator);
                 break;
             }
             case DataType::FLOAT: {
