@@ -8,6 +8,7 @@
 #include "BufferManager.h"
 #include "CatalogManager.h"
 #include "GlobalData.h"
+#include "Tokenizer.h"
 
 void write() {
     CM::CatalogManager cm;
@@ -73,6 +74,8 @@ void write() {
                 }
             }
         }
+        int _ = 1;
+        os.write(reinterpret_cast<const char*>(&_), BM::RECORD_TAIL_SIZE);
     }
 
     os.close();
@@ -87,10 +90,10 @@ int main() {
     for (int i = 0; i < 30; ++i) {
         void* data = bm.read("book", i);
         int bookid = *static_cast<int*>(data);
-        std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 256));
-        std::string author(static_cast<char*>(data) + 260,
-                           std::min((int)std::strlen(static_cast<char*>(data) + 260), 256));
-        float price = *(reinterpret_cast<float*>(static_cast<char*>(data) + 516));
+        std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 20));
+        std::string author(static_cast<char*>(data) + 24,
+                           std::min((int)std::strlen(static_cast<char*>(data) + 24), 20));
+        float price = *(reinterpret_cast<float*>(static_cast<char*>(data) + 44));
         std::cout << bookid << " " << title << " " << author << " " << price << std::endl;
     }
 
@@ -134,10 +137,10 @@ int main() {
     for (int i = 0; i < 2; ++i) {
         void* data = bm.read("book", i);
         int bookid = *static_cast<int*>(data);
-        std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 256));
-        std::string author(static_cast<char*>(data) + 260,
-                           std::min((int)std::strlen(static_cast<char*>(data) + 260), 256));
-        float price = *(reinterpret_cast<float*>(static_cast<char*>(data) + 516));
+        std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 20));
+        std::string author(static_cast<char*>(data) + 24,
+                           std::min((int)std::strlen(static_cast<char*>(data) + 24), 20));
+        float price = *(reinterpret_cast<float*>(static_cast<char*>(data) + 44));
         std::cout << bookid << " " << title << " " << author << " " << price << std::endl;
     }
 
@@ -161,6 +164,22 @@ int main() {
     }
 
     cm.save();
+
+    bm.delete_record("book", 0);
+
+    std::string sql = "create table student (\n"
+                      "    sno char(8),\n"
+                      "    sname char(16) unique,\n"
+                      "    sage int,\n"
+                      "    sgender char(1),\n"
+                      "    primary key(sno)\n"
+                      "    );";
+    std::vector<std::string> tokens;
+    std::vector<int> type;
+    Tokenizer::get_tokens(sql, tokens, type);
+    for (const auto& token : tokens) {
+        std::cout << token << std::endl;
+    }
 
     return 0;
 }

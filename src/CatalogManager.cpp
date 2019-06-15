@@ -20,14 +20,14 @@ CM::CatalogManager::CatalogManager() {
     for (const auto& m : d["database"].GetObject()) {
         if (strncmp(m.name.GetString(), "tables", 5) == 0) {
             for (const auto& v : m.value.GetArray()) {
-                std::cout << v.GetString() << std::endl;
+                //                std::cout << v.GetString() << std::endl;
                 table tmp;
                 tmp.name = v.GetString();
                 tables.push_back(tmp);
             }
         } else if (strncmp(m.name.GetString(), "indices", 7) == 0) {
             for (const auto& v : m.value.GetArray()) {
-                std::cout << v.GetString() << std::endl;
+                //                std::cout << v.GetString() << std::endl;
                 index tmp;
                 tmp.name = v.GetString();
                 indices.push_back(tmp);
@@ -117,7 +117,10 @@ bool CM::CatalogManager::create_table(CM::table& t) {
     t.fields[t.primaryKeyID].isUnique = true;
 
     for (const auto& _t : tables) {
-        if (_t.name == t.name) return false;
+        if (_t.name == t.name) {
+            std::cerr << "ERROR: [CatalogManager::create_table] Table '" << t.name << "' already exists!" << std::endl;
+            return false;
+        }
     }
 
     tables.push_back(t);
@@ -140,6 +143,7 @@ bool CM::CatalogManager::create_table(CM::table& t) {
             }
             case DataType::CHAR_N: {
                 _tmp.PushBack(StringRef("CHAR_N"), allocator);
+                _tmp.PushBack(f.N, allocator);
                 break;
             }
             case DataType::FLOAT: {
@@ -151,7 +155,7 @@ bool CM::CatalogManager::create_table(CM::table& t) {
         _f.PushBack(_tmp, allocator);
     }
     Value _u(kArrayType);
-    for (int i = 0; i < t.NOF; ++i) {
+    for (uint32_t i = 0; i < t.NOF; ++i) {
         if (t.fields[i].isUnique) {
             _u.PushBack(i, allocator);
         }

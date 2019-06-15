@@ -10,13 +10,17 @@
 #include <string>
 
 namespace BM {
+
+    const int RECORD_TAIL_SIZE = 1;
+
     class BufferManager {
     public:
         BufferManager();
         ~BufferManager();
 
-        // 从磁盘读取对应offset的数据
-        void* read(std::string dbName, uint32_t offset);
+        // 从磁盘读取对应offset的数据，返回该record的指针以及record所在buffer的idx
+        void* read(std::string tableName, uint32_t offset, int& idx);
+        void* read(std::string tableName, uint32_t offset);
 
         // 保存buffer[idx]内容到磁盘
         void save(size_t idx);
@@ -25,10 +29,12 @@ namespace BM {
         void set_modified(size_t idx);
 
         // 添加/覆盖一条record到buffer中，指定offset时直接覆盖数据，返回该record的offset和buffer的idx，buffer满时自动写回磁盘
-        std::pair<uint32_t, int> append_record(std::string dbName, const Record& row, uint32_t offset = -1);
+        std::pair<uint32_t, int> append_record(std::string tableName, const Record& row, uint32_t offset = UINT32_MAX);
 
         // 删除一条record（填0），返回该record的offset和buffer的idx，buffer删空时自动写回磁盘
-        void* delete_record(std::string dbName, uint32_t offset);
+        void* delete_record(std::string tableName, uint32_t offset);
+
+        bool create_table(std::string& tableName);
 
     private:
         int get_free_buffer();
