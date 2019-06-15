@@ -55,8 +55,8 @@ void* BM::BufferManager::read(std::string tableName, uint32_t offset, int& idx) 
     std::clog << "beginOffset: " << buf[i].beginOffset << "; endOffset: " << buf[i].endOffset << std::endl;
 #endif
 
-    uint64_t totalOffet = (t.sizePerTuple + RECORD_TAIL_SIZE) * offset;
-    lseek(fd, totalOffet, SEEK_SET);
+    uint64_t totalOffset = (t.sizePerTuple + RECORD_TAIL_SIZE) * offset;
+    lseek(fd, totalOffset, SEEK_SET);
     ::read(fd, buf[i].buf, BLOCK_SIZE);
     close(fd);
     return buf[i].buf;
