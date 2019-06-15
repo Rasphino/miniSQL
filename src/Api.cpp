@@ -68,3 +68,5 @@ bool Api::create_table(std::string tableName,
 
     return true;
 }
+
+bool Api::drop_table(std::string& tableName) { return true; }

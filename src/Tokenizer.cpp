@@ -5,7 +5,6 @@
 #include "Tokenizer.h"
 #include <iostream>
 int Tokenizer::get_tokens(std::string& sql, std::vector<std::string>& tokens, std::vector<int>& type) {
-    int endCount = 0;
     STATE state = IDLE;
     int cursor = 0;
     std::string token;
@@ -49,7 +48,6 @@ int Tokenizer::get_tokens(std::string& sql, std::vector<std::string>& tokens, st
             tokens.push_back(token);
             type.push_back(END);
             token.clear();
-            endCount++;
             state = IDLE;
         } else if (state == IDENTIFIER) {
             if (isalnum(ch) || ch == '_') {
@@ -101,6 +99,5 @@ int Tokenizer::get_tokens(std::string& sql, std::vector<std::string>& tokens, st
 
         if (moveCursor) cursor++;
     }
-
-    return endCount;
+    return 1;
 }

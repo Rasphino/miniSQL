@@ -9,9 +9,9 @@
 #include <vector>
 
 class Tokenizer {
+public:
     enum STATE { INVALID = -1, IDLE, END, IDENTIFIER, NUMBER, STRING_SINGLE, STRING_DOUBLE, SYMBOL, OPERATOR };
 
-public:
     static int get_tokens(std::string& sql, std::vector<std::string>& tokens, std::vector<int>& type);
 };
 
