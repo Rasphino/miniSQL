@@ -167,5 +167,19 @@ int main() {
 
     bm.delete_record("book", 0);
 
+    std::string sql = "create table student (\n"
+                      "    sno char(8),\n"
+                      "    sname char(16) unique,\n"
+                      "    sage int,\n"
+                      "    sgender char(1),\n"
+                      "    primary key(sno)\n"
+                      "    );";
+    std::vector<std::string> tokens;
+    std::vector<int> type;
+    Tokenizer::get_tokens(sql, tokens, type);
+    for (const auto& token : tokens) {
+        std::cout << token << std::endl;
+    }
+
     return 0;
 }

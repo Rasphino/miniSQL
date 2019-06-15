@@ -5,8 +5,26 @@
 #include "Api.h"
 #include "iostream"
 
-bool Api::create_table(std::string tableName,
-                       std::string primaryKey,
+int Api::select(std::string& tableName) { return 1; }
+
+int Api::select(std::string& tableName,
+                std::vector<std::string>& colName,
+                std::vector<std::string>& operand,
+                std::vector<std::string>& cond) {
+    return 1;
+}
+
+int Api::insert_record(std::string& tableName, std::vector<std::string>& value) { return 1; }
+
+int Api::delete_record(std::string& tableName,
+                       std::vector<std::string>& colName,
+                       std::vector<std::string>& operand,
+                       std::vector<std::string>& cond) {
+    return 1;
+}
+
+bool Api::create_table(std::string& tableName,
+                       std::string& primaryKey,
                        std::vector<std::string>& colName,
                        std::vector<std::string>& colType,
                        std::vector<uint8_t>& colSize,
@@ -70,3 +88,7 @@ bool Api::create_table(std::string tableName,
 }
 
 bool Api::drop_table(std::string& tableName) { return true; }
+
+bool Api::create_index(std::string& indexName, std::string& tableName, std::string& colName) { return true; }
+
+bool Api::drop_index(std::string& indexName) { return false; }

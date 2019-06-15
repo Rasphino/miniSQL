@@ -11,14 +11,22 @@
 #include <vector>
 
 namespace Api {
-    int select();
+    int select(std::string& tableName);
 
-    int insert_record();
+    int select(std::string& tableName,
+               std::vector<std::string>& colName,
+               std::vector<std::string>& operand,
+               std::vector<std::string>& cond);
 
-    int delete_record();
+    int insert_record(std::string& tableName, std::vector<std::string>& value);
 
-    bool create_table(std::string tableName,
-                      std::string primaryKey,
+    int delete_record(std::string& tableName,
+                      std::vector<std::string>& colName,
+                      std::vector<std::string>& operand,
+                      std::vector<std::string>& cond);
+
+    bool create_table(std::string& tableName,
+                      std::string& primaryKey,
                       std::vector<std::string>& colName,
                       std::vector<std::string>& colType,
                       std::vector<uint8_t>& colSize,
@@ -26,10 +34,10 @@ namespace Api {
 
     bool drop_table(std::string& tableName);
 
-    bool create_index(std::string indexName, std::string tableName, std::string colName);
+    bool create_index(std::string& indexName, std::string& tableName, std::string& colName);
 
     bool drop_index(std::string& indexName);
 
-};
+}
 
 #endif // DB_MINISQL_API_H
