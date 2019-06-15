@@ -71,12 +71,6 @@ bool Api::create_table(std::string& tableName,
     catalogManager.save();
 
     //
-    // create table for buffer manager
-    //
-    BM::BufferManager& bufferManager = MiniSQL::get_buffer_manager();
-    if (!bufferManager.create_table(t.name)) return false;
-
-    //
     // create table for catalog manager
     //
 

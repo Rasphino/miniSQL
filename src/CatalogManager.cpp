@@ -6,6 +6,13 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef UNIX
+#include <unistd.h>
+#endif
+#ifdef WIN32
+#include <io.h>
+#endif
+
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>
@@ -13,6 +20,12 @@
 using namespace rapidjson;
 
 CM::CatalogManager::CatalogManager() {
+    if (access("db.json", 0) == -1) {
+        std::ofstream os("db.json");
+        os << "{\"database\": {\"name\": \"TBD\",\"tables\": [],\"indices\": []},\"table\": {},\"index\": {}}";
+        os.close();
+    }
+
     std::ifstream in("db.json");
     IStreamWrapper isw(in);
     d.ParseStream(isw);
@@ -89,9 +102,7 @@ CM::CatalogManager::CatalogManager() {
     }
 }
 
-CM::CatalogManager::~CatalogManager() {}
-
-CM::table& CM::CatalogManager::get_table(std::string name) {
+CM::table& CM::CatalogManager::get_table(std::string& name) {
     for (auto& t : tables) {
         if (t.name == name) {
             return t;
@@ -199,3 +210,5 @@ bool CM::CatalogManager::create_index(CM::index& t) {
     _index.AddMember(StringRef(t.name.c_str()), _i, allocator);
     return true;
 }
+
+std::vector<CM::table>& CM::CatalogManager::get_tables() { return tables; }

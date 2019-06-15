@@ -64,7 +64,7 @@ void Interpreter::select() {
     cur++;
     // 无WHERE，选择全部的数据
 
-    if (cur == tokens.size() || tokens[cur] != ";" || types[cur] != Tokenizer::END) {
+    if (cur == tokens.size() && (tokens[cur] != ";" || types[cur] != Tokenizer::END)) {
         error("select", "';'");
         return;
     } else if (cur + 1 == tokens.size()) {
@@ -103,7 +103,7 @@ void Interpreter::select() {
         cur++;
         if (types[cur] == Tokenizer::END)
             break;
-        else if (tokens[cur] != "and" || types[cur] != Tokenizer::IDENTIFIER) {
+        else if (tokens[cur] != "AND" || types[cur] != Tokenizer::IDENTIFIER) {
             error("select", "'and'(Conjunctive selection is not supported)");
             return;
         }

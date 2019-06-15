@@ -8,9 +8,8 @@
 
 #include <iostream>
 
-BM::BufferManager* MiniSQL::bufferManager = nullptr;
 CM::CatalogManager* MiniSQL::catalogManager = nullptr;
-// RM::RecordManager* MiniSQL::recordManager = nullptr;
+RM::RecordManager* MiniSQL::recordManager = nullptr;
 // IM::IndexManager* MiniSQL::indexManager = nullptr;
 
 void test() {
@@ -39,17 +38,15 @@ int main() {
 }
 
 void MiniSQL::init() {
-    bufferManager = new BM::BufferManager;
     catalogManager = new CM::CatalogManager;
-    //    recordManager = new RM::RecordManager;
+    recordManager = new RM::RecordManager;
     //    indexManager = IM::IndexManager;
 }
 void MiniSQL::clean_up() {
-    delete bufferManager;
     delete catalogManager;
-    //    delete recordManager;
+    delete recordManager;
     //    delete indexManager;
 }
 
-BM::BufferManager& MiniSQL::get_buffer_manager() { return *bufferManager; }
 CM::CatalogManager& MiniSQL::get_catalog_manager() { return *catalogManager; }
+RM::RecordManager& MiniSQL::get_record_manager() { return *recordManager; }
