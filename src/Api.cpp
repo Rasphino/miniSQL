@@ -118,7 +118,33 @@ int Api::delete_record(std::string& tableName,
     if (!table_exist_helper(tableName)) {
         return 0;
     }
-    return 1;
+
+    uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
+
+    std::vector<int> offsets;
+    for (int i = 0; i < size; ++i) {
+        offsets.push_back(i);
+    }
+    int limit = cond.size();
+    for (int i = 0; i < limit; i++) {
+        std::vector<int> tmpOffsets;
+        bool flag = MiniSQL::get_record_manager().get_ids_from_condition(
+            tableName, colName[i], operand[i], cond[i], tmpOffsets);
+        vectorAnd(offsets, tmpOffsets);
+        if (!offsets.size()) break;
+    }
+
+
+    MiniSQL::get_record_manager().delete_record(tableName, offsets);
+
+    /*if (records.empty()) {
+        std::cout << "Select no record" << std::endl;
+        return 0;
+    }*/
+
+    //print_helper(tableName, records);
+
+    return offsets.size();
 }
 
 bool Api::create_table(std::string& tableName,
