@@ -134,8 +134,13 @@ int Api::insert_record(std::string& tableName, Record& value) {
         return 0;
     }
 
-    // TODO
-    return MiniSQL::get_record_manager().insert_record(tableName, value);
+    uint32_t offset = MiniSQL::get_record_manager().insert_record(tableName, value);
+    auto& indices = MiniSQL::get_catalog_manager().get_indices();
+    for (auto& index : indices) {
+        if (index.onTableName == tableName)
+            MiniSQL::get_index_manager().insert_key(index, value[index.onFieldID], offset);
+    }
+    return 1;
 }
 
 int Api::delete_record(std::string& tableName,
@@ -164,7 +169,16 @@ int Api::delete_record(std::string& tableName,
     }
 
     MiniSQL::get_record_manager().delete_record(tableName, offsets);
-    // TODO
+
+    auto& indices = MiniSQL::get_catalog_manager().get_indices();
+
+    for (auto& offset : offsets) {
+        for (auto& index : indices) {
+            if (index.onTableName == tableName) {
+                MiniSQL::get_index_manager().delete_key(index, offset);
+            }
+        }
+    }
 
     return offsets.size();
 }
@@ -224,8 +238,8 @@ bool Api::create_table(std::string& tableName,
     //
     // create table for index manager
     //
-    std::string indexName = tableName + "_PK";
-    create_index(indexName, tableName, primaryKey);
+    //    std::string indexName = tableName + "_PK";
+    //    create_index(indexName, tableName, primaryKey);
 
     return true;
 }
@@ -236,7 +250,17 @@ bool Api::drop_table(std::string& tableName) {
     }
 
     MiniSQL::get_record_manager().get_buffer_manager().set_free(tableName);
-    // TODO
+
+    auto& indices = MiniSQL::get_catalog_manager().get_indices();
+    for (auto& index : indices) {
+        if (index.onTableName == tableName) {
+            MiniSQL::get_index_manager().delete_index(index);
+            MiniSQL::get_catalog_manager().drop_index(index.name);
+        }
+    }
+
+    MiniSQL::get_record_manager().get_buffer_manager().drop_table(tableName);
+    MiniSQL::get_catalog_manager().drop_table(tableName);
 
     return true;
 }
@@ -323,8 +347,10 @@ bool Api::drop_index(std::string& indexName) {
         std::cout << e.what() << std::endl;
         return false;
     }
-    // TODO
-    return false;
+    auto& index = MiniSQL::get_catalog_manager().get_index(indexName);
+    MiniSQL::get_index_manager().delete_index(index);
+    MiniSQL::get_catalog_manager().drop_index(indexName);
+    return true;
 }
 
 bool Api::table_exist_helper(std::string& tableName) {

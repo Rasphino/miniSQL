@@ -121,9 +121,24 @@ CM::index& CM::CatalogManager::get_index(std::string& name) {
 }
 
 void CM::CatalogManager::save() {
-    StringBuffer buffer;
-    Writer<StringBuffer> writer_(buffer);
-    d.Accept(writer_);
+    std::ofstream os("db.json");
+    os << "{\"database\": {\"name\": \"TBD\",\"tables\": [],\"indices\": []},\"table\": {},\"index\": {}}";
+    os.close();
+
+    std::ifstream in("db.json");
+    IStreamWrapper isw(in);
+    d.ParseStream(isw);
+
+    for (auto& idx : indices) {
+        create_index(idx, true);
+    }
+    for (auto& tab : tables) {
+        create_table(tab, true);
+    }
+
+    //    StringBuffer buffer;
+    //    Writer<StringBuffer> writer_(buffer);
+    //    d.Accept(writer_);
     //    std::clog << buffer.GetString() << std::endl;
 
     std::ofstream ofs("db.json");
@@ -132,18 +147,21 @@ void CM::CatalogManager::save() {
     d.Accept(writer);
 }
 
-bool CM::CatalogManager::create_table(CM::table& t) {
-    // 确保主键是unique的
-    t.fields[t.primaryKeyID].isUnique = true;
+bool CM::CatalogManager::create_table(CM::table& t, bool overWrite) {
+    if (!overWrite) {
+        // 确保主键是unique的
+        t.fields[t.primaryKeyID].isUnique = true;
 
-    for (const auto& _t : tables) {
-        if (_t.name == t.name) {
-            std::cerr << "ERROR: [CatalogManager::create_table] Table '" << t.name << "' already exists!" << std::endl;
-            return false;
+        for (const auto& _t : tables) {
+            if (_t.name == t.name) {
+                std::cerr << "ERROR: [CatalogManager::create_table] Table '" << t.name << "' already exists!"
+                          << std::endl;
+                return false;
+            }
         }
-    }
 
-    tables.push_back(t);
+        tables.push_back(t);
+    }
 
     auto itr = d["database"].MemberBegin();
     auto& allocator = d.GetAllocator();
@@ -189,22 +207,24 @@ bool CM::CatalogManager::create_table(CM::table& t) {
     return true;
 }
 
-bool CM::CatalogManager::create_index(CM::index& t) {
-    // 检查index所在的table是否存在
-    bool hasTable = false;
-    for (const auto& item : tables) {
-        if (item.name == t.onTableName) {
-            hasTable = true;
-            break;
+bool CM::CatalogManager::create_index(CM::index& t, bool overWrite) {
+    if (!overWrite) {
+        // 检查index所在的table是否存在
+        bool hasTable = false;
+        for (const auto& item : tables) {
+            if (item.name == t.onTableName) {
+                hasTable = true;
+                break;
+            }
         }
-    }
-    if (!hasTable) return false;
+        if (!hasTable) return false;
 
-    for (const auto& _t : indices) {
-        if (_t.name == t.name) return false;
-    }
+        for (const auto& _t : indices) {
+            if (_t.name == t.name) return false;
+        }
 
-    indices.push_back(t);
+        indices.push_back(t);
+    }
 
     auto itr = d["database"].MemberBegin();
     auto& allocator = d.GetAllocator();
@@ -221,3 +241,43 @@ bool CM::CatalogManager::create_index(CM::index& t) {
 }
 
 std::vector<CM::table>& CM::CatalogManager::get_tables() { return tables; }
+
+std::vector<CM::index>& CM::CatalogManager::get_indices() { return indices; }
+
+bool CM::CatalogManager::drop_table(std::string& tableName) {
+    std::ofstream os("db.json");
+    os << "{\"database\": {\"name\": \"TBD\",\"tables\": [],\"indices\": []},\"table\": {},\"index\": {}}";
+    os.close();
+
+    std::ifstream in("db.json");
+    IStreamWrapper isw(in);
+    d.ParseStream(isw);
+
+    for (auto itr = tables.begin(); itr != tables.end(); ++itr) {
+        if (itr->name == tableName) {
+            tables.erase(itr);
+            break;
+        }
+    }
+    save();
+    return true;
+}
+
+bool CM::CatalogManager::drop_index(std::string& indexName) {
+    std::ofstream os("db.json");
+    os << "{\"database\": {\"name\": \"TBD\",\"tables\": [],\"indices\": []},\"table\": {},\"index\": {}}";
+    os.close();
+
+    std::ifstream in("db.json");
+    IStreamWrapper isw(in);
+    d.ParseStream(isw);
+
+    for (auto itr = indices.begin(); itr != indices.end(); ++itr) {
+        if (itr->name == indexName) {
+            indices.erase(itr);
+            break;
+        }
+    }
+    save();
+    return true;
+}

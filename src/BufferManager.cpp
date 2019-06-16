@@ -319,3 +319,5 @@ void BM::BufferManager::set_free(std::string& tableName) {
         }
     }
 }
+
+bool BM::BufferManager::drop_table(std::string& tableName) { return std::remove(tableName.c_str()) == 0; }

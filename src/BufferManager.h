@@ -43,6 +43,8 @@ namespace BM {
         // 将所有该表使用的buf设为未使用
         void set_free(std::string& tableName);
 
+        bool drop_table(std::string& tableName);
+
     private:
         int get_free_buffer();
         void copy_to_buffer(const Record& row, const CM::table& t, char* p) const;

@@ -26,7 +26,7 @@ namespace RM {
             std::string& tableName, std::string& colName, std::string& operand, std::string& cond, Records& records);
         int select(std::string& tableName, std::vector<int>& offsets, Records& records);
 
-        bool insert_record(std::string& tableName, Record record);
+        uint32_t insert_record(std::string& tableName, Record record);
 
         bool delete_record(std::string& tableName, std::string& colName, std::string& operand, std::string& cond);
         bool delete_record(std::string& tableName, std::vector<int>& offsets);

@@ -482,8 +482,13 @@ void Interpreter::exec_file() {
         error("exec_file", "file name");
         return;
     }
+    cur = tokens.size() - 1;
+    if (tokens[tokens.size() - 1] != ";") {
+        error("exec_file", "';'");
+        return;
+    }
     std::string filename;
-    for (int i = 1; i < tokens.size(); ++i) {
+    for (int i = 1; i < tokens.size() - 1; ++i) {
         filename.append(tokens[i]);
     }
     std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
@@ -491,6 +496,11 @@ void Interpreter::exec_file() {
 
     std::ifstream IF;
     IF.open(filename);
+
+    if (!IF.is_open()) {
+        std::cout << "ERROR: [Interpreter:: exec_file] file name " << filename << " not found!" << std::endl;
+        return;
+    }
 
     Interpreter interpreter;
     std::string sql;
