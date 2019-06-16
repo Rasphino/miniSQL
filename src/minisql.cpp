@@ -12,17 +12,6 @@ CM::CatalogManager* MiniSQL::catalogManager = nullptr;
 RM::RecordManager* MiniSQL::recordManager = nullptr;
 IM::IndexManager* MiniSQL::indexManager = nullptr;
 
-void test() {
-    std::vector<std::string> colName;
-    std::vector<std::string> colType;
-    std::vector<uint8_t> colSize;
-    std::vector<bool> colUnique;
-    colName.emplace_back("id"), colType.emplace_back("INT"), colSize.push_back(4), colUnique.push_back(true);
-    colName.emplace_back("name"), colType.emplace_back("CHAR"), colSize.push_back(20), colUnique.push_back(false);
-    colName.emplace_back("price"), colType.emplace_back("FLOAT"), colSize.push_back(4), colUnique.push_back(false);
-    //    Api::create_table("shit", "id", colName, colType, colSize, colUnique);
-}
-
 int main() {
     MiniSQL::init();
     Interpreter interpreter;
@@ -32,10 +21,9 @@ int main() {
         std::cout << "\nminisql $ ";
         if (std::cin.eof()) break;
         getline(std::cin, sql);
-        std::cin.clear();
         interpreter.execute(sql);
     }
-
+    std::cin.clear();
     return 0;
 }
 
@@ -44,6 +32,7 @@ void MiniSQL::init() {
     recordManager = new RM::RecordManager;
     indexManager = new IM::IndexManager;
 }
+
 void MiniSQL::clean_up() {
     delete catalogManager;
     delete recordManager;

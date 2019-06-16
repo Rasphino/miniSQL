@@ -485,6 +485,7 @@ void Interpreter::exec_file() {
     cur = tokens.size() - 1;
     if (tokens[tokens.size() - 1] != ";") {
         error("exec_file", "';'");
+        return;
     }
     std::string filename;
     for (int i = 1; i < tokens.size() - 1; ++i) {

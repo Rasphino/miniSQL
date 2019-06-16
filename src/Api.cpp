@@ -255,8 +255,12 @@ bool Api::drop_table(std::string& tableName) {
     for (auto& index : indices) {
         if (index.onTableName == tableName) {
             MiniSQL::get_index_manager().delete_index(index);
+            MiniSQL::get_catalog_manager().drop_index(index.name);
         }
     }
+
+    MiniSQL::get_record_manager().get_buffer_manager().drop_table(tableName);
+    MiniSQL::get_catalog_manager().drop_table(tableName);
 
     return true;
 }
@@ -345,7 +349,8 @@ bool Api::drop_index(std::string& indexName) {
     }
     auto& index = MiniSQL::get_catalog_manager().get_index(indexName);
     MiniSQL::get_index_manager().delete_index(index);
-    return false;
+    MiniSQL::get_catalog_manager().drop_index(indexName);
+    return true;
 }
 
 bool Api::table_exist_helper(std::string& tableName) {
