@@ -30,7 +30,9 @@ int main() {
     std::string sql;
     while (!interpreter.isExit()) {
         std::cout << "\nminisql $ ";
+        if (std::cin.eof()) break;
         getline(std::cin, sql);
+        std::cin.clear();
         interpreter.execute(sql);
     }
 
