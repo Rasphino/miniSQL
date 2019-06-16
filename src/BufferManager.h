@@ -5,7 +5,6 @@
 #ifndef DB_MINISQL_BUFFERMANAGER_H
 #define DB_MINISQL_BUFFERMANAGER_H
 
-#include "CatalogManager.h"
 #include "GlobalData.h"
 #include <string>
 
@@ -19,8 +18,8 @@ namespace BM {
         ~BufferManager();
 
         // 从磁盘读取对应offset的数据，返回该record的指针以及record所在buffer的idx
-        void* read(std::string tableName, uint32_t offset, int& idx);
-        void* read(std::string tableName, uint32_t offset);
+        void* read(std::string& tableName, uint32_t offset, int& idx);
+        void* read(std::string& tableName, uint32_t offset);
 
         // 保存buffer[idx]内容到磁盘
         void save(size_t idx);
@@ -36,13 +35,14 @@ namespace BM {
 
         bool create_table(std::string& tableName);
 
+        uint32_t get_table_size(std::string& tableName);
+
     private:
         int get_free_buffer();
         void copy_to_buffer(const Record& row, const CM::table& t, char* p) const;
 
         buffer* buf;
         CM::table* tables[BUF_NUM];
-        CM::CatalogManager cm;
     };
 }
 

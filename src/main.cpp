@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <tuple>
 
@@ -9,10 +10,30 @@
 #include "CatalogManager.h"
 #include "GlobalData.h"
 #include "Tokenizer.h"
+#include "minisql.h"
+
+CM::CatalogManager* MiniSQL::catalogManager = nullptr;
+RM::RecordManager* MiniSQL::recordManager = nullptr;
+// IM::IndexManager* MiniSQL::indexManager = nullptr;
+
+void MiniSQL::init() {
+    catalogManager = new CM::CatalogManager;
+    recordManager = new RM::RecordManager;
+    //    indexManager = IM::IndexManager;
+}
+void MiniSQL::clean_up() {
+    delete catalogManager;
+    delete recordManager;
+    //    delete indexManager;
+}
+
+CM::CatalogManager& MiniSQL::get_catalog_manager() { return *catalogManager; }
+RM::RecordManager& MiniSQL::get_record_manager() { return *recordManager; }
 
 void write() {
     CM::CatalogManager cm;
-    CM::table& t = cm.get_table("book");
+    std::string s("book");
+    CM::table& t = cm.get_table(s);
 
     Records data;
     data.push_back({std::to_string(1), "book1", "author1", std::to_string(12.4f)});
@@ -82,13 +103,15 @@ void write() {
 }
 
 int main() {
+    MiniSQL::init();
     write();
 
     BM::BufferManager bm;
     CM::CatalogManager cm;
 
     for (int i = 0; i < 30; ++i) {
-        void* data = bm.read("book", i);
+        std::string s("book");
+        void* data = bm.read(s, i);
         int bookid = *static_cast<int*>(data);
         std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 20));
         std::string author(static_cast<char*>(data) + 24,
@@ -134,8 +157,9 @@ int main() {
     std::clog << offset << std::endl;
     bm.save(idx);
 
+    std::string s("book");
     for (int i = 0; i < 2; ++i) {
-        void* data = bm.read("book", i);
+        void* data = bm.read(s, i);
         int bookid = *static_cast<int*>(data);
         std::string title(static_cast<char*>(data) + 4, std::min((int)std::strlen(static_cast<char*>(data) + 4), 20));
         std::string author(static_cast<char*>(data) + 24,
@@ -165,21 +189,43 @@ int main() {
 
     cm.save();
 
-    bm.delete_record("book", 0);
+    RM::RecordManager rm;
+    auto& table = MiniSQL::get_catalog_manager().get_table(s);
+    rm.create_table(s);
 
-    std::string sql = "create table student (\n"
-                      "    sno char(8),\n"
-                      "    sname char(16) unique,\n"
-                      "    sage int,\n"
-                      "    sgender char(1),\n"
-                      "    primary key(sno)\n"
-                      "    );";
-    std::vector<std::string> tokens;
-    std::vector<int> type;
-    Tokenizer::get_tokens(sql, tokens, type);
-    for (const auto& token : tokens) {
-        std::cout << token << std::endl;
+    std::string colName = "bookid";
+    std::string operand = "45";
+    std::string cond = ">=";
+    Records records;
+    rm.select(s, colName, operand, cond, records);
+
+    int rowSize = records[0].size();
+    std::cout << std::setw(20) << "┌──────────────────────┬";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┬";
+    std::cout << std::setw(20) << "─────────────────────┐" << std::endl;
+
+    std::cout << "│ " << std::setw(20) << table.fields[0].name << " │";
+    for (int i = 1; i < table.fields.size(); ++i) {
+        std::cout << std::setw(20) << table.fields[i].name << " │";
     }
+    std::cout << std::endl;
 
+    std::cout << std::setw(20) << "├──────────────────────┼";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┼";
+    std::cout << std::setw(20) << "─────────────────────┤" << std::endl;
+
+    for (const auto& row : records) {
+        std::cout << "│ " << std::setw(20) << row[0] << " │";
+        for (int i = 1; i < row.size(); ++i) {
+            std::cout << std::setw(20) << row[i] << " │";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::setw(20) << "└──────────────────────┴";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┴";
+    std::cout << std::setw(20) << "─────────────────────┘";
     return 0;
 }

@@ -16,6 +16,7 @@ const int BLOCK_SIZE = 8192;
 enum DataType { INT, CHAR_N, FLOAT };
 
 namespace CM {
+    class CatalogManager;
     struct field {
         std::string name; // field的名称
         DataType type;    // 该field的类型
@@ -40,17 +41,22 @@ namespace CM {
 }
 
 namespace BM {
+    class BufferManager;
     const int BUF_NUM = 2; // buffer数量
 
-    typedef struct buffer_ {
+    struct buffer {
         uint32_t beginOffset; // 该buffer包含多个tuple的最低offset
         uint32_t endOffset;
         char buf[BLOCK_SIZE];
         uint8_t accessTimes; // 访问次数
         bool isModified;     // 数据是否被修改过
         bool isPinned;       // buffer是否被锁定
-        bool inUse;          // buffer是否正在被使用
-    } buffer;
+        bool inUse;          // buffer是否正在被使用;
+    };
+}
+
+namespace RM {
+    class RecordManager;
 }
 
 #endif // DB_MINISQL_GLOBALDATA_H

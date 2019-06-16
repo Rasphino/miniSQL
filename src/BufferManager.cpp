@@ -20,8 +20,9 @@
 #endif
 
 #include "BufferManager.h"
+#include "minisql.h"
 
-void* BM::BufferManager::read(std::string tableName, uint32_t offset, int& idx) {
+void* BM::BufferManager::read(std::string& tableName, uint32_t offset, int& idx) {
     // 若buffer中已经缓存过数据，则直接返回buffer中的数据
     for (int i = 0; i < BUF_NUM; ++i) {
         if (buf[i].inUse && tables[i] != nullptr && tables[i]->name == tableName && buf[i].beginOffset <= offset &&
@@ -35,8 +36,10 @@ void* BM::BufferManager::read(std::string tableName, uint32_t offset, int& idx) 
         }
     }
 
-    CM::table& t = cm.get_table(tableName);
+    CM::table& t = MiniSQL::get_catalog_manager().get_table(tableName);
     int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
+    if (fd == -1) return nullptr;
+
     // 获取文件大小，以免endOffset越界
     uint32_t size = lseek(fd, 0, SEEK_END);
 
@@ -59,10 +62,11 @@ void* BM::BufferManager::read(std::string tableName, uint32_t offset, int& idx) 
     lseek(fd, totalOffset, SEEK_SET);
     ::read(fd, buf[i].buf, BLOCK_SIZE);
     close(fd);
+    idx = i;
     return buf[i].buf;
 }
 
-void* BM::BufferManager::read(std::string tableName, uint32_t offset) {
+void* BM::BufferManager::read(std::string& tableName, uint32_t offset) {
     int idx;
     return read(tableName, offset, idx);
 }
@@ -70,7 +74,7 @@ void* BM::BufferManager::read(std::string tableName, uint32_t offset) {
 // 查找空余的buffer
 int BM::BufferManager::get_free_buffer() {
     int i = 0;
-    while (this->buf[i].inUse && i < BM::BUF_NUM)
+    while (i < BM::BUF_NUM && this->buf[i].inUse)
         i++;
 
     // 若所有buffer都已使用，则替换最近访问次数最少的buffer
@@ -147,8 +151,15 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string tableName,
             }
         }
 
-        CM::table& t = cm.get_table(tableName);
+        CM::table& t = MiniSQL::get_catalog_manager().get_table(tableName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
+        if (fd == -1) {
+            mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            int fd = open(tableName.c_str(), O_CREAT, mode);
+            close(fd);
+        }
+        fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
+
         // 获取文件大小，以免endOffset越界
         uint32_t size = lseek(fd, 0, SEEK_END);
 
@@ -175,7 +186,7 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string tableName,
         return std::make_pair(offset, i);
 
     } else {
-        CM::table& t = cm.get_table(tableName);
+        CM::table& t = MiniSQL::get_catalog_manager().get_table(tableName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
         uint32_t size = lseek(fd, 0, SEEK_END);
         uint32_t _endOffset = size / (t.sizePerTuple + RECORD_TAIL_SIZE);
@@ -263,4 +274,12 @@ bool BM::BufferManager::create_table(std::string& tableName) {
     int fd = open(tableName.c_str(), O_CREAT, mode);
     close(fd);
     return fd != -1;
+}
+
+uint32_t BM::BufferManager::get_table_size(std::string& tableName) {
+    CM::table& t = MiniSQL::get_catalog_manager().get_table(tableName);
+    int fd = open(tableName.c_str(), O_RDONLY, S_IREAD);
+    // 获取文件大小，以免endOffset越界
+    uint32_t size = lseek(fd, 0, SEEK_END);
+    return size / (t.sizePerTuple + RECORD_TAIL_SIZE);
 }

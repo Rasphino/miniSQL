@@ -15,9 +15,10 @@ namespace CM {
     class CatalogManager {
     public:
         CatalogManager();
-        ~CatalogManager();
+        ~CatalogManager() = default;
 
-        table& get_table(std::string name);
+        table& get_table(std::string& name);
+        std::vector<table>& get_tables();
         void save();
 
         bool create_table(table& t);

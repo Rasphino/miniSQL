@@ -18,7 +18,7 @@ namespace Api {
                std::vector<std::string>& operand,
                std::vector<std::string>& cond);
 
-    int insert_record(std::string& tableName, std::vector<std::string>& value);
+    int insert_record(std::string& tableName, Record& value);
 
     int delete_record(std::string& tableName,
                       std::vector<std::string>& colName,
@@ -38,6 +38,7 @@ namespace Api {
 
     bool drop_index(std::string& indexName);
 
+    void print_helper(std::string& tableName, const Records& records);
 }
 
 #endif // DB_MINISQL_API_H
