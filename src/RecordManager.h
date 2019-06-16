@@ -24,7 +24,7 @@ namespace RM {
 
         int select(
             std::string& tableName, std::string& colName, std::string& operand, std::string& cond, Records& records);
-        int select(std::string& tableName, std::vector<int>& offsets);
+        int select(std::string& tableName, std::vector<int>& offsets, Records& records);
 
         bool insert_record(std::string& tableName, Record record);
 
@@ -36,6 +36,8 @@ namespace RM {
                                     std::string& operand,
                                     std::string& cond,
                                     std::vector<int>& offsets);
+
+        uint32_t get_table_size(std::string& tableName);
 
     private:
         std::map<std::string, std::vector<uint32_t>> emptySlots;

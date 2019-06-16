@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <tuple>
 
@@ -189,12 +190,42 @@ int main() {
     cm.save();
 
     RM::RecordManager rm;
+    auto& table = MiniSQL::get_catalog_manager().get_table(s);
     rm.create_table(s);
 
-    std::string colName = "title";
-    std::string operand = "cccsrsdgstykrsk";
-    std::string cond = "=";
-    rm.delete_record(s, colName, operand, cond);
+    std::string colName = "bookid";
+    std::string operand = "45";
+    std::string cond = ">=";
+    Records records;
+    rm.select(s, colName, operand, cond, records);
 
+    int rowSize = records[0].size();
+    std::cout << std::setw(20) << "┌──────────────────────┬";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┬";
+    std::cout << std::setw(20) << "─────────────────────┐" << std::endl;
+
+    std::cout << "│ " << std::setw(20) << table.fields[0].name << " │";
+    for (int i = 1; i < table.fields.size(); ++i) {
+        std::cout << std::setw(20) << table.fields[i].name << " │";
+    }
+    std::cout << std::endl;
+
+    std::cout << std::setw(20) << "├──────────────────────┼";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┼";
+    std::cout << std::setw(20) << "─────────────────────┤" << std::endl;
+
+    for (const auto& row : records) {
+        std::cout << "│ " << std::setw(20) << row[0] << " │";
+        for (int i = 1; i < row.size(); ++i) {
+            std::cout << std::setw(20) << row[i] << " │";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::setw(20) << "└──────────────────────┴";
+    for (int i = 1; i < rowSize - 1; ++i)
+        std::cout << std::setw(20) << "─────────────────────┴";
+    std::cout << std::setw(20) << "─────────────────────┘";
     return 0;
 }

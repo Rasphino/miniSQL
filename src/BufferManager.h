@@ -35,7 +35,7 @@ namespace BM {
 
         bool create_table(std::string& tableName);
 
-        uint32_t get_table_size(std::string tableName);
+        uint32_t get_table_size(std::string& tableName);
 
     private:
         int get_free_buffer();

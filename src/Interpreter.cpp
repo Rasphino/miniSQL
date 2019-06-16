@@ -126,7 +126,7 @@ void Interpreter::insert() {
         return;
     }
     std::string tableName = tokens[cur];
-    std::vector<std::string> value;
+    Record value;
 
     cur++;
     if (tokens[cur] != "VALUES" || types[cur] != Tokenizer::IDENTIFIER) {

@@ -45,6 +45,7 @@ void RM::RecordManager::create_table(std::string& tableName) {
     if (access(tmp.c_str(), 0) == -1) {
         std::ofstream OF(tmp);
     }
+    bufferManager.create_table(tableName);
 }
 
 void RM::RecordManager::drop_table(std::string& tableName) { std::remove(std::string("record/" + tableName).c_str()); }
@@ -53,14 +54,45 @@ int RM::RecordManager::select(
     std::string& tableName, std::string& colName, std::string& operand, std::string& cond, Records& records) {
     std::vector<int> offsets;
     if (get_ids_from_condition(tableName, colName, operand, cond, offsets))
-        return select(tableName, offsets);
+        return select(tableName, offsets, records);
     else
         return false;
 }
 
-int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets) { return 0; }
+int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets, Records& records) {
+    for (const auto& offset : offsets) {
+        void* data = bufferManager.read(tableName, offset);
+        auto& t = MiniSQL::get_catalog_manager().get_table(tableName);
+        uint32_t beginOffset = 0;
+        Record r;
+        for (int i = 0; i < t.NOF; ++i) {
+            if (t.fields[i].type == DataType::INT) {
+                int d = *(reinterpret_cast<int*>(static_cast<char*>(data) + beginOffset));
+                r.push_back(std::to_string(d));
+                beginOffset += 4;
+            } else if (t.fields[i].type == DataType::CHAR_N) {
+                std::string d(
+                    static_cast<char*>(data) + beginOffset,
+                    std::min(std::strlen(static_cast<char*>(data) + beginOffset), (unsigned long)t.fields[i].N));
+                r.push_back(d);
+                beginOffset += t.fields[i].N;
+            } else if (t.fields[i].type == DataType::FLOAT) {
+                float d = *(reinterpret_cast<float*>(static_cast<char*>(data) + beginOffset));
+                r.push_back(std::to_string(d));
+                beginOffset += 4;
+            }
+        }
+        records.push_back(r);
+    }
+    return records.size();
+}
 
-bool RM::RecordManager::insert_record(std::string& tableName, Record record) { return false; }
+bool RM::RecordManager::insert_record(std::string& tableName, Record record) {
+    int offset, idx;
+    std::tie(offset, idx) = bufferManager.append_record(tableName, record);
+    bufferManager.save(idx);
+    return true;
+}
 
 bool RM::RecordManager::delete_record(std::string& tableName,
                                       std::string& colName,
@@ -136,3 +168,5 @@ bool RM::RecordManager::get_ids_from_condition(
         return true;
     }
 }
+
+uint32_t RM::RecordManager::get_table_size(std::string& tableName) { return bufferManager.get_table_size(tableName); }
