@@ -10,7 +10,7 @@
 
 CM::CatalogManager* MiniSQL::catalogManager = nullptr;
 RM::RecordManager* MiniSQL::recordManager = nullptr;
-// IM::IndexManager* MiniSQL::indexManager = nullptr;
+IM::IndexManager* MiniSQL::indexManager = nullptr;
 
 void test() {
     std::vector<std::string> colName;
@@ -40,13 +40,14 @@ int main() {
 void MiniSQL::init() {
     catalogManager = new CM::CatalogManager;
     recordManager = new RM::RecordManager;
-    //    indexManager = IM::IndexManager;
+    indexManager = new IM::IndexManager;
 }
 void MiniSQL::clean_up() {
     delete catalogManager;
     delete recordManager;
-    //    delete indexManager;
+    delete indexManager;
 }
 
 CM::CatalogManager& MiniSQL::get_catalog_manager() { return *catalogManager; }
 RM::RecordManager& MiniSQL::get_record_manager() { return *recordManager; }
+IM::IndexManager& MiniSQL::get_index_manager() { return *indexManager; }

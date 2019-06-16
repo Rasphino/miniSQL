@@ -37,6 +37,8 @@ namespace RM {
                                     std::string& cond,
                                     std::vector<int>& offsets);
 
+        BM::BufferManager& get_buffer_manager();
+
         uint32_t get_table_size(std::string& tableName);
 
     private:

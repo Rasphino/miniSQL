@@ -3,6 +3,7 @@
 //
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 
 #include "Interpreter.h"
@@ -10,8 +11,11 @@
 bool Interpreter::isExit() const { return exiting; }
 
 void Interpreter::execute(std::string& sql) {
+    auto start = std::chrono::steady_clock::now();
     Tokenizer::get_tokens(sql, tokens, types);
-    if (tokens.empty() || tokens[cur] == "QUIT" || tokens[cur] == "EXIT" || tokens[cur] == "Q") {
+    if (tokens.empty()) {
+        return;
+    } else if (tokens[cur] == "QUIT" || tokens[cur] == "EXIT" || tokens[cur] == "Q") {
         exit();
     } else if (types[cur] != Tokenizer::IDENTIFIER && types[cur] != Tokenizer::END) {
         error("execute", "instruction");
@@ -30,6 +34,8 @@ void Interpreter::execute(std::string& sql) {
     } else {
         std::cout << "ERROR: [Interpreter::execute] Unknown instruction " << tokens[cur] << std::endl;
     }
+    auto end = std::chrono::steady_clock::now();
+    std::cout << "Time usage: " << std::chrono::duration<double, std::milli>(end - start).count() << " ms" << std::endl;
     tokens.clear();
     types.clear();
     cur = 0;
@@ -69,10 +75,10 @@ void Interpreter::select() {
     cur++;
     // 无WHERE，选择全部的数据
 
-    if (cur == tokens.size() && (tokens[cur] != ";" || types[cur] != Tokenizer::END)) {
+    if (tokens.size() == 4) {
         error("select", "';'");
         return;
-    } else if (cur + 1 == tokens.size()) {
+    } else if (tokens.size() == 5 && tokens[cur] == ";" && types[cur] == Tokenizer::END) {
         Api::select(tableName);
         return;
     }
@@ -188,17 +194,23 @@ void Interpreter::remove() {
     std::string tableName = tokens[cur];
     std::vector<std::string> colName, operand, cond;
 
+    cur++;
+    if (tokens[cur] != "WHERE" || types[cur] != Tokenizer::IDENTIFIER) {
+        error("select", "WHERE");
+        return;
+    }
+
     while (true) {
         cur++;
         if (types[cur] != Tokenizer::IDENTIFIER) {
-            error("select", "column name");
+            error("delete", "column name");
             return;
         }
         colName.push_back(tokens[cur]);
 
         cur++;
         if (types[cur] != Tokenizer::OPERATOR) {
-            error("select", "operator");
+            error("delete", "operator");
             return;
         }
         cond.push_back(tokens[cur]);
@@ -206,7 +218,7 @@ void Interpreter::remove() {
         cur++;
         if (types[cur] != Tokenizer::NUMBER && types[cur] != Tokenizer::STRING_SINGLE &&
             types[cur] != Tokenizer::STRING_DOUBLE) {
-            error("select", "value");
+            error("delete", "value");
             return;
         }
         operand.push_back(tokens[cur]);
@@ -214,14 +226,14 @@ void Interpreter::remove() {
         cur++;
         if (types[cur] == Tokenizer::END)
             break;
-        else if (tokens[cur] != "and" || types[cur] != Tokenizer::IDENTIFIER) {
-            error("select", "'and'(Conjunctive selection is not supported)");
+        else if (tokens[cur] != "AND" || types[cur] != Tokenizer::IDENTIFIER) {
+            error("delete", "'and'(Conjunctive selection is not supported)");
             return;
         }
     }
 
     int res = Api::delete_record(tableName, colName, operand, cond);
-    std::cout << res << " record(s) deleted!" << std::endl;
+    //    std::cout << res << " record(s) deleted!" << std::endl;
 }
 
 void Interpreter::create() {
@@ -352,7 +364,10 @@ void Interpreter::create_table() {
     }
 
     bool res = Api::create_table(tableName, primaryKey, colName, colType, colSize, colUnique);
-    if (res) std::cout << "Create table success" << std::endl;
+    if (res)
+        std::cout << "Create table " << tableName << " success!" << std::endl;
+    else
+        std::cout << "Failed to create table" << std::endl;
 }
 
 void Interpreter::create_index() {
@@ -403,6 +418,10 @@ void Interpreter::create_index() {
     }
 
     bool res = Api::create_index(indexName, tableName, colName);
+    if (res)
+        std::cout << "Create index on " << tableName << "(" << colName << ") success!" << std::endl;
+    else
+        std::cout << "Failed to create index" << std::endl;
 }
 
 void Interpreter::drop() {
@@ -431,6 +450,10 @@ void Interpreter::drop_table() {
     }
 
     bool res = Api::drop_table(tableName);
+    if (res)
+        std::cout << "drop table " << tableName << " success!" << std::endl;
+    else
+        std::cout << "Failed to drop table" << std::endl;
 }
 
 void Interpreter::drop_index() {
@@ -448,6 +471,10 @@ void Interpreter::drop_index() {
     }
 
     bool res = Api::drop_index(indexName);
+    if (res)
+        std::cout << "drop index " << indexName << " success!" << std::endl;
+    else
+        std::cout << "Failed to drop index" << std::endl;
 }
 
 void Interpreter::exec_file() {

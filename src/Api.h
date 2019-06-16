@@ -41,8 +41,8 @@ namespace Api {
     void print_helper(std::string& tableName, const Records& records);
 
     bool table_exist_helper(std::string& tableName);
-	
-	bool vectorAnd(std::vector<int>&, std::vector<int>&);
+
+    bool vectorAnd(std::vector<int>&, std::vector<int>&);
 }
 
 #endif // DB_MINISQL_API_H

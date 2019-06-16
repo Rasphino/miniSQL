@@ -1,55 +1,59 @@
 #pragma once
 #include "BTree.h"
-template<typename T>
-class IndexManager {
-public:
-    bool create_index(table, index, vector<link<T>>);
-    bool delete_index(index);
+#include "GlobalData.h"
 
+namespace IM {
 
-    bool insert_key(index, T, int);
-    bool delete_key(index, T, int);
+    class IndexManager {
+    public:
+        template<typename T>
+        bool create_index(CM::table&, CM::index&, std::vector<link<T>>&);
+        bool delete_index(CM::index&);
 
-private:
-};
+        template<typename T>
+        bool insert_key(CM::index&, T, int);
+        template<typename T>
+        bool delete_key(CM::index&, T, int);
 
+    private:
+    };
 
-template<typename T>
-inline bool IndexManager<T>::create_index(table tableInfo, index indexInfo, vector<link<T>>keys) {
-    std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-	//create file
-    return false;
-}
+    template<typename T>
+    inline bool IndexManager::create_index(CM::table& tableInfo, CM::index& indexInfo, std::vector<link<T>>& keys) {
+        std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
+        // create file
+        return false;
+    }
 
-template<typename T>
-inline bool IndexManager<T>::delete_index(index) {
-    std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-	//delete file
-    return false;
-}
+    inline bool IndexManager::delete_index(CM::index& indexInfo) {
+        std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
+        // delete file
+        return false;
+    }
 
-template<typename T>
-inline bool IndexManager<T>::insert_key(index indexInfo, T key, int id) {
-    std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-    BTree<T> Tree = new BTree(fileName);
-    
-	bool tagInsert=Tree->insert(key, id);
+    template<typename T>
+    inline bool IndexManager::insert_key(CM::index& indexInfo, T key, int id) {
+        std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
+        BTree<T> Tree = new BTree<T>(fileName);
 
-	Tree->saveFile(fileName);
-    delete Tree;
+        bool tagInsert = Tree->insert(key, id);
 
-    return tagInsert;
-}
+        Tree->saveFile(fileName);
+        delete Tree;
 
-template<typename T>
-inline bool IndexManager<T>::delete_key(index indexInfo, T key, int id) {
-    std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-    BTree<T> Tree = new BTree(fileName);
+        return tagInsert;
+    }
 
-	bool tagDelete = Tree->Delete(key, id);
+    template<typename T>
+    inline bool IndexManager::delete_key(CM::index& indexInfo, T key, int id) {
+        std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
+        BTree<T> Tree = new BTree<T>(fileName);
 
-	Tree->saveFile(fileName);
-    delete Tree;
+        bool tagDelete = Tree->Delete(key, id);
 
-    return false;
+        Tree->saveFile(fileName);
+        delete Tree;
+
+        return false;
+    }
 }

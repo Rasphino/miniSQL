@@ -14,7 +14,7 @@
 
 CM::CatalogManager* MiniSQL::catalogManager = nullptr;
 RM::RecordManager* MiniSQL::recordManager = nullptr;
-// IM::IndexManager* MiniSQL::indexManager = nullptr;
+IM::IndexManager* MiniSQL::indexManager = nullptr;
 
 void MiniSQL::init() {
     catalogManager = new CM::CatalogManager;
@@ -29,6 +29,7 @@ void MiniSQL::clean_up() {
 
 CM::CatalogManager& MiniSQL::get_catalog_manager() { return *catalogManager; }
 RM::RecordManager& MiniSQL::get_record_manager() { return *recordManager; }
+IM::IndexManager& MiniSQL::get_index_manager() { return *indexManager; }
 
 void write() {
     CM::CatalogManager cm;
