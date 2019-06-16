@@ -2,6 +2,7 @@
 // Created by rasp on 19-6-10.
 //
 
+#include <algorithm>
 #include <iomanip>
 
 #include "Api.h"
@@ -66,7 +67,27 @@ void Api::print_helper(std::string& tableName, const Records& records) {
     std::cout << std::setw(20) << "─────────────────────┘";
 }
 
-bool Api::vectorAnd(std::vector<int>& offset, std::vector<int>& tmp) {}
+bool Api::vectorAnd(std::vector<int>& offset, std::vector<int>& tmp) {
+    int SIZE = offset.size();
+    std::sort(offset.begin(), offset.end());
+    std::sort(tmp.begin(), tmp.end());
+    if (offset.empty() || tmp.empty()) {
+        offset.clear();
+        return true;
+    }
+    int pos = 0;
+    std::vector<int> ans;
+    ans.clear();
+    for (int i = 0; i < tmp.size(); i++) {
+        while (pos < SIZE && offset[pos] < tmp[i])
+            pos++;
+        if (pos < SIZE && offset[pos] == tmp[i]) {
+            ans.push_back(tmp[i]);
+        }
+    }
+    offset.swap(ans);
+    return true;
+}
 
 int Api::select(std::string& tableName,
                 std::vector<std::string>& colName,
@@ -207,6 +228,7 @@ bool Api::create_table(std::string& tableName,
     //
     // create table for index manager
     //
+    create_index(tableName + "PK", tableName, primaryKey);
 
     return true;
 }
