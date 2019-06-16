@@ -221,3 +221,5 @@ bool CM::CatalogManager::create_index(CM::index& t) {
 }
 
 std::vector<CM::table>& CM::CatalogManager::get_tables() { return tables; }
+
+std::vector<CM::index>& CM::CatalogManager::get_indices() { return indices; }

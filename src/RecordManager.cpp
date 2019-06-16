@@ -93,11 +93,11 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
     return records.size();
 }
 
-bool RM::RecordManager::insert_record(std::string& tableName, Record record) {
-    int offset, idx;
+uint32_t RM::RecordManager::insert_record(std::string& tableName, Record record) {
+    uint32_t offset, idx;
     //    bool flag = bufferManager.save(tableName);
     std::tie(offset, idx) = bufferManager.append_record(tableName, record);
-    return true;
+    return offset;
 }
 
 bool RM::RecordManager::delete_record(std::string& tableName,

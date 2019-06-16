@@ -1,8 +1,10 @@
 #pragma once
 #include "BNode.h"
 #include <deque>
+#include <fstream>
 #include <iostream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 constexpr int N = 5;
@@ -16,18 +18,20 @@ namespace IM {
             root = NULL;
             isEmpty = 1;
         }
-        bool insert(T, int);
+        bool insert_key(T, int);
         bool insert_in_leaf(BNode<T>*, link<T>);
         BNode<T>* find(BNode<T>*, link<T>);
         bool insert_in_parent(BNode<T>*, link<T>, BNode<T>*);
         void printAll();
+        void print(std::ofstream& OF);
         bool Delete(T, int);
         bool delete_entry(BNode<T>*, link<T>);
         bool delete_key(BNode<T>*, link<T>, int);
         bool replace(BNode<T>*, link<T>, link<T>);
         bool swap_node(BNode<T>**, BNode<T>**);
-        bool saveFile(std::string fileName);
+        // bool saveFile(std::string fileName);
         int ask(int);
+        bool build(std::string);
 
     private:
         BNode<T>* root;
@@ -35,7 +39,10 @@ namespace IM {
     };
 
     template<typename T>
-    bool BTree<T>::insert(T _key, int _id) {
+    bool BTree<T>::build(std::string fileName) {}
+
+    template<typename T>
+    bool BTree<T>::insert_key(T _key, int _id) {
         link<T> val = std::make_pair(_key, _id);
         if (isEmpty) {
             BNode<T>* L = new BNode<T>;
@@ -386,5 +393,49 @@ namespace IM {
             printf("\n");
         }
     }
+    template<typename T>
+    void BTree<T>::print(std::ofstream& OF) {
+        std::deque<BNode<T>*> hh;
+        hh.clear();
+        if (root != NULL) hh.push_back(root);
+        if (typeid(T) == typeid(int))
+            OF << "0 ";
+        else if (typeid(T) == typeid(float))
+            OF << "1 ";
+        else if (typeid(T) == typeid(std::string))
+            OF << "2 ";
+        OF << std::endl;
+        while (!hh.empty()) {
+            BNode<T>* L = hh.front();
+            hh.pop_front();
+            int SIZE = L->getSize();
+            OF << SIZE << ' ' << L->isLeaf() << ' ';
+            for (int i = 0; i < SIZE; i++)
+                OF << L->keys[i].first << ' ';
+            // cout << std::endl;
+            if (!L->isLeaf()) {
+                /*if (L->ptrs.size() != SIZE + 1) {
+                    printf("Error\n");
+                    exit(0);
+                }*/
+                for (int i = 0; i <= SIZE; i++) {
+                    hh.push_back(L->ptrs[i]);
 
+                    /*if (L->ptrs[i]->parent() != L) {
+                        printf("Error printALL %d \n", i);
+                        L->ptrs[i]->print();
+                        L->ptrs[i]->parent()->print();
+                    }*/
+                }
+
+            } else {
+                // printf("  ids:");
+                for (int i = 0; i < SIZE; i++) {
+                    OF << L->keys[i].second;
+                    // printf("%d ", L->keys[i].second);
+                }
+            }
+            OF << std::endl;
+        }
+    }
 }

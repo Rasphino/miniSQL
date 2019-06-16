@@ -20,6 +20,7 @@ namespace CM {
         table& get_table(std::string& name);
         index& get_index(std::string& name);
         std::vector<table>& get_tables();
+        std::vector<index>& get_indices();
         void save();
 
         bool create_table(table& t);
