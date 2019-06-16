@@ -34,7 +34,7 @@ namespace IM {
     template<typename T>
     inline bool IndexManager::insert_key(CM::index indexInfo, T key, int id) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-        BTree<T> Tree = new BTree(fileName);
+        BTree<T> Tree = new BTree<T>(fileName);
 
         bool tagInsert = Tree->insert(key, id);
 
@@ -47,7 +47,7 @@ namespace IM {
     template<typename T>
     inline bool IndexManager::delete_key(CM::index indexInfo, T key, int id) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
-        BTree<T> Tree = new BTree(fileName);
+        BTree<T> Tree = new BTree<T>(fileName);
 
         bool tagDelete = Tree->Delete(key, id);
 

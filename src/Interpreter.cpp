@@ -11,7 +11,9 @@ bool Interpreter::isExit() const { return exiting; }
 
 void Interpreter::execute(std::string& sql) {
     Tokenizer::get_tokens(sql, tokens, types);
-    if (tokens.empty() || tokens[cur] == "QUIT" || tokens[cur] == "EXIT" || tokens[cur] == "Q") {
+    if (tokens.empty()) {
+        return;
+    } else if (tokens[cur] == "QUIT" || tokens[cur] == "EXIT" || tokens[cur] == "Q") {
         exit();
     } else if (types[cur] != Tokenizer::IDENTIFIER && types[cur] != Tokenizer::END) {
         error("execute", "instruction");
@@ -220,7 +222,7 @@ void Interpreter::remove() {
         cur++;
         if (types[cur] == Tokenizer::END)
             break;
-        else if (tokens[cur] != "and" || types[cur] != Tokenizer::IDENTIFIER) {
+        else if (tokens[cur] != "AND" || types[cur] != Tokenizer::IDENTIFIER) {
             error("delete", "'and'(Conjunctive selection is not supported)");
             return;
         }

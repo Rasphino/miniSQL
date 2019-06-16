@@ -87,7 +87,8 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
                 beginOffset += 4;
             }
         }
-        records.push_back(r);
+        bool isNotDelete = *(reinterpret_cast<bool*>(static_cast<char*>(data) + beginOffset));
+        if (isNotDelete) records.push_back(r);
     }
     return records.size();
 }
@@ -131,6 +132,8 @@ bool RM::RecordManager::verify_data(
     } else if (type == DataType::FLOAT) {
         float d = *(reinterpret_cast<float*>(static_cast<char*>(data) + beginOffset));
         return cmp(d, std::stof(operand), cond);
+    } else {
+        return false;
     }
 }
 

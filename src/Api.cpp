@@ -18,6 +18,7 @@ int Api::select(std::string& tableName) {
 
     uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
     std::vector<int> offsets;
+    offsets.reserve(size);
     for (int i = 0; i < size; ++i) {
         offsets.push_back(i);
     }
@@ -228,7 +229,6 @@ bool Api::create_table(std::string& tableName,
     //
     // create table for index manager
     //
-    create_index(tableName + "PK", tableName, primaryKey);
 
     return true;
 }
