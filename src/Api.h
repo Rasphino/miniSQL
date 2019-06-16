@@ -39,6 +39,8 @@ namespace Api {
     bool drop_index(std::string& indexName);
 
     void print_helper(std::string& tableName, const Records& records);
+
+    bool table_exist_helper(std::string& tableName);
 }
 
 #endif // DB_MINISQL_API_H

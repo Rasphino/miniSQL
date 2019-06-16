@@ -8,6 +8,10 @@
 #include "iostream"
 
 int Api::select(std::string& tableName) {
+    if (!table_exist_helper(tableName)) {
+        return 0;
+    }
+
     uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
     std::vector<int> offsets;
     for (int i = 0; i < size; ++i) {
@@ -67,6 +71,10 @@ int Api::select(std::string& tableName,
 }
 
 int Api::insert_record(std::string& tableName, Record& value) {
+    if (!table_exist_helper(tableName)) {
+        return 0;
+    }
+
     return MiniSQL::get_record_manager().insert_record(tableName, value);
 }
 
@@ -74,6 +82,9 @@ int Api::delete_record(std::string& tableName,
                        std::vector<std::string>& colName,
                        std::vector<std::string>& operand,
                        std::vector<std::string>& cond) {
+    if (table_exist_helper(tableName)) {
+        return 0;
+    }
     return 1;
 }
 
@@ -136,8 +147,31 @@ bool Api::create_table(std::string& tableName,
     return true;
 }
 
-bool Api::drop_table(std::string& tableName) { return true; }
+bool Api::drop_table(std::string& tableName) {
+    if (table_exist_helper(tableName)) {
+        return false;
+    }
+    return true;
+}
 
 bool Api::create_index(std::string& indexName, std::string& tableName, std::string& colName) { return true; }
 
-bool Api::drop_index(std::string& indexName) { return false; }
+bool Api::drop_index(std::string& indexName) {
+    try {
+        MiniSQL::get_catalog_manager().get_index(indexName);
+    } catch (std::runtime_error& e) {
+        std::cout << e.what() << std::endl;
+        return false;
+    }
+    return false;
+}
+
+bool Api::table_exist_helper(std::string& tableName) {
+    try {
+        MiniSQL::get_catalog_manager().get_table(tableName);
+    } catch (std::runtime_error& e) {
+        std::cout << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}

@@ -108,7 +108,16 @@ CM::table& CM::CatalogManager::get_table(std::string& name) {
             return t;
         }
     }
-    throw(std::runtime_error("CM getTable: table name not found!"));
+    throw(std::runtime_error("ERROR: [CatalogManager::get_table] table name " + name + " not found!"));
+}
+
+CM::index& CM::CatalogManager::get_index(std::string& name) {
+    for (auto& t : indices) {
+        if (t.name == name) {
+            return t;
+        }
+    }
+    throw(std::runtime_error("ERROR: [CatalogManager::get_index] index name " + name + " not found!"));
 }
 
 void CM::CatalogManager::save() {

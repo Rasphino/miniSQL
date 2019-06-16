@@ -35,6 +35,7 @@ private:
     void drop();
     void drop_table();
     void drop_index();
+    void exec_file();
     void exit();
 };
 

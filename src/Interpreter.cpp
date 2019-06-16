@@ -2,6 +2,9 @@
 // Created by rasp on 19-6-10.
 //
 
+#include <algorithm>
+#include <fstream>
+
 #include "Interpreter.h"
 
 bool Interpreter::isExit() const { return exiting; }
@@ -22,8 +25,10 @@ void Interpreter::execute(std::string& sql) {
         create();
     } else if (tokens[cur] == "DROP") {
         drop();
+    } else if (tokens[cur] == "EXECFILE") {
+        exec_file();
     } else {
-        std::cerr << "ERROR: [Interpreter::execute] Unknown instruction " << tokens[cur] << std::endl;
+        std::cout << "ERROR: [Interpreter::execute] Unknown instruction " << tokens[cur] << std::endl;
     }
     tokens.clear();
     types.clear();
@@ -443,6 +448,30 @@ void Interpreter::drop_index() {
     }
 
     bool res = Api::drop_index(indexName);
+}
+
+void Interpreter::exec_file() {
+    if (tokens.size() == 1) {
+        error("exec_file", "file name");
+        return;
+    }
+    std::string filename;
+    for (int i = 1; i < tokens.size(); ++i) {
+        filename.append(tokens[i]);
+    }
+    std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
+    std::cout << filename << std::endl;
+
+    std::ifstream IF;
+    IF.open(filename);
+
+    Interpreter interpreter;
+    std::string sql;
+    while (!interpreter.isExit() && !IF.eof()) {
+        //        std::cout << "\n-----> ";
+        getline(IF, sql);
+        interpreter.execute(sql);
+    }
 }
 
 void Interpreter::exit() {

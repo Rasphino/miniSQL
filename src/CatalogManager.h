@@ -18,6 +18,7 @@ namespace CM {
         ~CatalogManager() = default;
 
         table& get_table(std::string& name);
+        index& get_index(std::string& name);
         std::vector<table>& get_tables();
         void save();
 
