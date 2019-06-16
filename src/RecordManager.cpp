@@ -12,8 +12,8 @@
 #endif
 
 #ifdef WIN32
+#include <direct.h>
 #include <io.h>
-#include<direct.h>
 #endif
 
 #include "RecordManager.h"
@@ -77,9 +77,8 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
                 r.push_back(std::to_string(d));
                 beginOffset += 4;
             } else if (t.fields[i].type == DataType::CHAR_N) {
-                std::string d(
-                    static_cast<char*>(data) + beginOffset,
-                    std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)t.fields[i].N));
+                std::string d(static_cast<char*>(data) + beginOffset,
+                              std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)t.fields[i].N));
                 r.push_back(d);
                 beginOffset += t.fields[i].N;
             } else if (t.fields[i].type == DataType::FLOAT) {
@@ -95,8 +94,9 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
 
 bool RM::RecordManager::insert_record(std::string& tableName, Record record) {
     int offset, idx;
+    //    bool flag = bufferManager.save(tableName);
     std::tie(offset, idx) = bufferManager.append_record(tableName, record);
-    return bufferManager.save(idx);
+    return true;
 }
 
 bool RM::RecordManager::delete_record(std::string& tableName,
@@ -125,9 +125,8 @@ bool RM::RecordManager::verify_data(
         int d = *(reinterpret_cast<int*>(static_cast<char*>(data) + beginOffset));
         return cmp(d, std::stoi(operand), cond);
     } else if (type == DataType::CHAR_N) {
-        std::string d(
-            static_cast<char*>(data) + beginOffset,
-            std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)endOffset - beginOffset));
+        std::string d(static_cast<char*>(data) + beginOffset,
+                      std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)endOffset - beginOffset));
         return cmp(d, operand, cond);
     } else if (type == DataType::FLOAT) {
         float d = *(reinterpret_cast<float*>(static_cast<char*>(data) + beginOffset));
@@ -175,3 +174,5 @@ bool RM::RecordManager::get_ids_from_condition(
 }
 
 uint32_t RM::RecordManager::get_table_size(std::string& tableName) { return bufferManager.get_table_size(tableName); }
+
+BM::BufferManager& RM::RecordManager::get_buffer_manager() { return bufferManager; }

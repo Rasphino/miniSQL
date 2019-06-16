@@ -12,6 +12,9 @@ int Api::select(std::string& tableName) {
         return 0;
     }
 
+    // 将buffer中所有与该table有关的数据写回
+    MiniSQL::get_record_manager().get_buffer_manager().save(tableName);
+
     uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
     std::vector<int> offsets;
     for (int i = 0; i < size; ++i) {
@@ -63,9 +66,7 @@ void Api::print_helper(std::string& tableName, const Records& records) {
     std::cout << std::setw(20) << "─────────────────────┘";
 }
 
-bool Api::vectorAnd(std::vector<int>& offset, std::vector<int>& tmp) {
-	
-}
+bool Api::vectorAnd(std::vector<int>& offset, std::vector<int>& tmp) {}
 
 int Api::select(std::string& tableName,
                 std::vector<std::string>& colName,
@@ -75,12 +76,15 @@ int Api::select(std::string& tableName,
         return 0;
     }
 
+    MiniSQL::get_record_manager().get_buffer_manager().save(tableName);
+
     uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
 
     std::vector<int> offsets;
     for (int i = 0; i < size; ++i) {
         offsets.push_back(i);
     }
+
     int limit = cond.size();
     for (int i = 0; i < limit; i++) {
         std::vector<int> tmpOffsets;
@@ -119,6 +123,8 @@ int Api::delete_record(std::string& tableName,
         return 0;
     }
 
+    MiniSQL::get_record_manager().get_buffer_manager().save(tableName);
+
     uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
 
     std::vector<int> offsets;
@@ -134,7 +140,6 @@ int Api::delete_record(std::string& tableName,
         if (!offsets.size()) break;
     }
 
-
     MiniSQL::get_record_manager().delete_record(tableName, offsets);
 
     /*if (records.empty()) {
@@ -142,7 +147,7 @@ int Api::delete_record(std::string& tableName,
         return 0;
     }*/
 
-    //print_helper(tableName, records);
+    // print_helper(tableName, records);
 
     return offsets.size();
 }
@@ -210,6 +215,9 @@ bool Api::drop_table(std::string& tableName) {
     if (!table_exist_helper(tableName)) {
         return false;
     }
+
+    MiniSQL::get_record_manager().get_buffer_manager().set_free(tableName);
+
     return true;
 }
 

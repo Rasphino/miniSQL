@@ -24,6 +24,9 @@ namespace BM {
         // 保存buffer[idx]内容到磁盘
         bool save(size_t idx);
 
+        // 保存所有该表使用的buf到磁盘
+        bool save(std::string& tableName);
+
         // 标记buffer[idx]已被修改
         void set_modified(size_t idx);
 
@@ -36,6 +39,9 @@ namespace BM {
         bool create_table(std::string& tableName);
 
         uint32_t get_table_size(std::string& tableName);
+
+        // 将所有该表使用的buf设为未使用
+        void set_free(std::string& tableName);
 
     private:
         int get_free_buffer();

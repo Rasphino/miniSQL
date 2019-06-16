@@ -300,3 +300,21 @@ uint32_t BM::BufferManager::get_table_size(std::string& tableName) {
     uint32_t size = lseek(fd, 0, SEEK_END);
     return size / (t.sizePerTuple + RECORD_TAIL_SIZE);
 }
+
+bool BM::BufferManager::save(std::string& tableName) {
+    bool flag = true;
+    for (int i = 0; i < BUF_NUM; ++i) {
+        if (tables[i] != nullptr && tables[i]->name == tableName && buf[i].inUse && buf[i].isModified) {
+            if (!save(i)) flag = false;
+        }
+    }
+    return flag;
+}
+
+void BM::BufferManager::set_free(std::string& tableName) {
+    for (int i = 0; i < BUF_NUM; ++i) {
+        if (tables[i] != nullptr && tables[i]->name == tableName) {
+            buf[i].inUse = false;
+        }
+    }
+}

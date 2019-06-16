@@ -188,17 +188,23 @@ void Interpreter::remove() {
     std::string tableName = tokens[cur];
     std::vector<std::string> colName, operand, cond;
 
+    cur++;
+    if (tokens[cur] != "WHERE" || types[cur] != Tokenizer::IDENTIFIER) {
+        error("select", "WHERE");
+        return;
+    }
+
     while (true) {
         cur++;
         if (types[cur] != Tokenizer::IDENTIFIER) {
-            error("select", "column name");
+            error("delete", "column name");
             return;
         }
         colName.push_back(tokens[cur]);
 
         cur++;
         if (types[cur] != Tokenizer::OPERATOR) {
-            error("select", "operator");
+            error("delete", "operator");
             return;
         }
         cond.push_back(tokens[cur]);
@@ -206,7 +212,7 @@ void Interpreter::remove() {
         cur++;
         if (types[cur] != Tokenizer::NUMBER && types[cur] != Tokenizer::STRING_SINGLE &&
             types[cur] != Tokenizer::STRING_DOUBLE) {
-            error("select", "value");
+            error("delete", "value");
             return;
         }
         operand.push_back(tokens[cur]);
@@ -215,7 +221,7 @@ void Interpreter::remove() {
         if (types[cur] == Tokenizer::END)
             break;
         else if (tokens[cur] != "and" || types[cur] != Tokenizer::IDENTIFIER) {
-            error("select", "'and'(Conjunctive selection is not supported)");
+            error("delete", "'and'(Conjunctive selection is not supported)");
             return;
         }
     }
