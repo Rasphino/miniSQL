@@ -110,25 +110,31 @@ BM::BufferManager::~BufferManager() {
     delete[] buf;
 }
 
-void BM::BufferManager::save(size_t idx) {
+bool BM::BufferManager::save(size_t idx) {
     // 将buffer标记为未使用，且如果buffer没有被修改，则直接返回
     if (!buf[idx].isModified) {
         buf[idx].accessTimes = 0;
         buf[idx].isPinned = buf[idx].isModified = buf[idx].inUse = false;
         tables[idx] = nullptr;
-        return;
+        return true;
     }
-
+#ifdef UNIX
     int fd = open(tables[idx]->name.c_str(), O_WRONLY, S_IWRITE | S_IREAD);
+#endif
+#ifdef WIN32
+    int fd = open(tables[idx]->name.c_str(), O_WRONLY);
+#endif
+    if (fd == -1) return false;
     lseek(fd, buf[idx].beginOffset * (tables[idx]->sizePerTuple + RECORD_TAIL_SIZE), SEEK_SET);
     // 写回时不能直接写BLOCK_SIZE，因为buffer的末尾部分并不完全
-    write(
+    _write(
         fd, buf[idx].buf, (buf[idx].endOffset - buf[idx].beginOffset) * (tables[idx]->sizePerTuple + RECORD_TAIL_SIZE));
     close(fd);
 
     buf[idx].accessTimes = 0;
     buf[idx].isPinned = buf[idx].isModified = buf[idx].inUse = false;
     tables[idx] = nullptr;
+    return true;
 }
 
 void BM::BufferManager::set_modified(size_t idx) { buf[idx].isModified = true; }
@@ -154,8 +160,13 @@ std::pair<uint32_t, int> BM::BufferManager::append_record(std::string tableName,
         CM::table& t = MiniSQL::get_catalog_manager().get_table(tableName);
         int fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
         if (fd == -1) {
+#ifdef UNIX
             mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
             int fd = open(tableName.c_str(), O_CREAT, mode);
+#endif
+#ifdef WIN32
+            int fd = open(tableName.c_str(), O_CREAT);
+#endif
             close(fd);
         }
         fd = open(t.name.c_str(), O_RDONLY, S_IREAD);
@@ -270,8 +281,14 @@ void* BM::BufferManager::delete_record(std::string tableName, uint32_t offset) {
 }
 
 bool BM::BufferManager::create_table(std::string& tableName) {
+#ifdef UNIX
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
     int fd = open(tableName.c_str(), O_CREAT, mode);
+#endif
+#ifdef WIN32
+    int fd = open(tableName.c_str(), O_CREAT);
+#endif
+    
     close(fd);
     return fd != -1;
 }

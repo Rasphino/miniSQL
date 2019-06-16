@@ -22,7 +22,7 @@ namespace BM {
         void* read(std::string& tableName, uint32_t offset);
 
         // 保存buffer[idx]内容到磁盘
-        void save(size_t idx);
+        bool save(size_t idx);
 
         // 标记buffer[idx]已被修改
         void set_modified(size_t idx);

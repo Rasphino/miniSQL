@@ -67,8 +67,7 @@ int Api::select(std::string& tableName,
 }
 
 int Api::insert_record(std::string& tableName, Record& value) {
-    MiniSQL::get_record_manager().insert_record(tableName, value);
-    return 1;
+    return MiniSQL::get_record_manager().insert_record(tableName, value);
 }
 
 int Api::delete_record(std::string& tableName,

@@ -13,6 +13,7 @@
 
 #ifdef WIN32
 #include <io.h>
+#include<direct.h>
 #endif
 
 #include "RecordManager.h"
@@ -22,7 +23,12 @@ RM::RecordManager::RecordManager() {
     auto& t = catalogManager.get_tables();
     if (t.empty()) {
         if (access("record", 0) == -1) {
+#ifdef UNIX
             mkdir("record", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#endif
+#ifdef WIN32
+            _mkdir("record");
+#endif
             return;
         } else {
             for (const auto& table : t) {
@@ -73,7 +79,7 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
             } else if (t.fields[i].type == DataType::CHAR_N) {
                 std::string d(
                     static_cast<char*>(data) + beginOffset,
-                    std::min(std::strlen(static_cast<char*>(data) + beginOffset), (unsigned long)t.fields[i].N));
+                    std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)t.fields[i].N));
                 r.push_back(d);
                 beginOffset += t.fields[i].N;
             } else if (t.fields[i].type == DataType::FLOAT) {
@@ -90,8 +96,7 @@ int RM::RecordManager::select(std::string& tableName, std::vector<int>& offsets,
 bool RM::RecordManager::insert_record(std::string& tableName, Record record) {
     int offset, idx;
     std::tie(offset, idx) = bufferManager.append_record(tableName, record);
-    bufferManager.save(idx);
-    return true;
+    return bufferManager.save(idx);
 }
 
 bool RM::RecordManager::delete_record(std::string& tableName,
@@ -122,7 +127,7 @@ bool RM::RecordManager::verify_data(
     } else if (type == DataType::CHAR_N) {
         std::string d(
             static_cast<char*>(data) + beginOffset,
-            std::min(std::strlen(static_cast<char*>(data) + beginOffset), (unsigned long)endOffset - beginOffset));
+            std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)endOffset - beginOffset));
         return cmp(d, operand, cond);
     } else if (type == DataType::FLOAT) {
         float d = *(reinterpret_cast<float*>(static_cast<char*>(data) + beginOffset));
