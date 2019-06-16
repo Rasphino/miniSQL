@@ -124,7 +124,7 @@ void CM::CatalogManager::save() {
     StringBuffer buffer;
     Writer<StringBuffer> writer_(buffer);
     d.Accept(writer_);
-    std::clog << buffer.GetString() << std::endl;
+    //    std::clog << buffer.GetString() << std::endl;
 
     std::ofstream ofs("db.json");
     OStreamWrapper osw(ofs);

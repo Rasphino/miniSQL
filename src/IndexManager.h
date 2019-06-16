@@ -7,32 +7,32 @@ namespace IM {
     class IndexManager {
     public:
         template<typename T>
-        bool create_index(CM::table, CM::index, std::vector<link<T>>);
-        bool delete_index(CM::index);
+        bool create_index(CM::table&, CM::index&, std::vector<link<T>>&);
+        bool delete_index(CM::index&);
 
         template<typename T>
-        bool insert_key(CM::index, T, int);
+        bool insert_key(CM::index&, T, int);
         template<typename T>
-        bool delete_key(CM::index, T, int);
+        bool delete_key(CM::index&, T, int);
 
     private:
     };
 
     template<typename T>
-    inline bool IndexManager::create_index(CM::table tableInfo, CM::index indexInfo, std::vector<link<T>> keys) {
+    inline bool IndexManager::create_index(CM::table& tableInfo, CM::index& indexInfo, std::vector<link<T>>& keys) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
         // create file
         return false;
     }
 
-    inline bool IndexManager::delete_index(CM::index indexInfo) {
+    inline bool IndexManager::delete_index(CM::index& indexInfo) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
         // delete file
         return false;
     }
 
     template<typename T>
-    inline bool IndexManager::insert_key(CM::index indexInfo, T key, int id) {
+    inline bool IndexManager::insert_key(CM::index& indexInfo, T key, int id) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
         BTree<T> Tree = new BTree<T>(fileName);
 
@@ -45,7 +45,7 @@ namespace IM {
     }
 
     template<typename T>
-    inline bool IndexManager::delete_key(CM::index indexInfo, T key, int id) {
+    inline bool IndexManager::delete_key(CM::index& indexInfo, T key, int id) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
         BTree<T> Tree = new BTree<T>(fileName);
 

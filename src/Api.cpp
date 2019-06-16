@@ -65,7 +65,7 @@ void Api::print_helper(std::string& tableName, const Records& records) {
     std::cout << std::setw(20) << "└──────────────────────┴";
     for (int i = 1; i < rowSize - 1; ++i)
         std::cout << std::setw(20) << "─────────────────────┴";
-    std::cout << std::setw(20) << "─────────────────────┘";
+    std::cout << std::setw(20) << "─────────────────────┘" << std::endl;
 }
 
 bool Api::vectorAnd(std::vector<int>& offset, std::vector<int>& tmp) {
@@ -134,6 +134,7 @@ int Api::insert_record(std::string& tableName, Record& value) {
         return 0;
     }
 
+    // TODO
     return MiniSQL::get_record_manager().insert_record(tableName, value);
 }
 
@@ -163,13 +164,7 @@ int Api::delete_record(std::string& tableName,
     }
 
     MiniSQL::get_record_manager().delete_record(tableName, offsets);
-
-    /*if (records.empty()) {
-        std::cout << "Select no record" << std::endl;
-        return 0;
-    }*/
-
-    // print_helper(tableName, records);
+    // TODO
 
     return offsets.size();
 }
@@ -229,6 +224,8 @@ bool Api::create_table(std::string& tableName,
     //
     // create table for index manager
     //
+    std::string indexName = tableName + "_PK";
+    create_index(indexName, tableName, primaryKey);
 
     return true;
 }
@@ -239,11 +236,85 @@ bool Api::drop_table(std::string& tableName) {
     }
 
     MiniSQL::get_record_manager().get_buffer_manager().set_free(tableName);
+    // TODO
 
     return true;
 }
 
-bool Api::create_index(std::string& indexName, std::string& tableName, std::string& colName) { return true; }
+bool Api::create_index(std::string& indexName, std::string& tableName, std::string& colName) {
+    CM::index index;
+    index.name = indexName;
+    index.onTableName = tableName;
+
+    if (!table_exist_helper(tableName)) {
+        return false;
+    }
+    CM::table& table = MiniSQL::get_catalog_manager().get_table(tableName);
+
+    int i = 0;
+    for (i = 0; i < table.NOF; ++i) {
+        if (table.fields[i].name == colName) break;
+    }
+    if (i == table.NOF) return false;
+
+    index.onFieldID = i;
+    if (!MiniSQL::get_catalog_manager().create_index(index)) return false;
+    MiniSQL::get_catalog_manager().save();
+
+    // 将buffer中所有与该table有关的数据写回
+    MiniSQL::get_record_manager().get_buffer_manager().save(tableName);
+
+    uint32_t size = MiniSQL::get_record_manager().get_table_size(tableName);
+    std::vector<int> offsets;
+    offsets.reserve(size);
+    for (int i = 0; i < size; ++i) {
+        offsets.push_back(i);
+    }
+    Records records;
+
+    auto& t = MiniSQL::get_catalog_manager().get_table(tableName);
+    uint32_t beginOffset = 0;
+    for (int j = 0; j < i; ++j) {
+        if (t.fields[j].type == DataType::INT) {
+            beginOffset += 4;
+        } else if (t.fields[j].type == DataType::CHAR_N) {
+            beginOffset += t.fields[j].N;
+        } else if (t.fields[j].type == DataType::FLOAT) {
+            beginOffset += 4;
+        }
+    }
+
+    if (table.fields[i].type == INT) {
+        std::vector<IM::link<int>> keys;
+        for (const auto& offset : offsets) {
+            void* data = MiniSQL::get_record_manager().get_buffer_manager().read(tableName, offset);
+            int d = *(reinterpret_cast<int*>(static_cast<char*>(data) + beginOffset));
+            bool isNotDelete = *(reinterpret_cast<bool*>(static_cast<char*>(data) + table.sizePerTuple));
+            if (isNotDelete) keys.emplace_back(d, offset);
+        }
+        return MiniSQL::get_index_manager().create_index(table, index, keys);
+    } else if (table.fields[i].type == CHAR_N) {
+        std::vector<IM::link<std::string>> keys;
+        for (const auto& offset : offsets) {
+            void* data = MiniSQL::get_record_manager().get_buffer_manager().read(tableName, offset);
+            std::string d(static_cast<char*>(data) + beginOffset,
+                          std::min(std::strlen(static_cast<char*>(data) + beginOffset), (size_t)t.fields[i].N));
+            bool isNotDelete = *(reinterpret_cast<bool*>(static_cast<char*>(data) + table.sizePerTuple));
+            if (isNotDelete) keys.emplace_back(d, offset);
+        }
+        return MiniSQL::get_index_manager().create_index(table, index, keys);
+    } else if (table.fields[i].type == FLOAT) {
+        std::vector<IM::link<float>> keys;
+        for (const auto& offset : offsets) {
+            void* data = MiniSQL::get_record_manager().get_buffer_manager().read(tableName, offset);
+            float d = *(reinterpret_cast<float*>(static_cast<char*>(data) + beginOffset));
+            bool isNotDelete = *(reinterpret_cast<bool*>(static_cast<char*>(data) + table.sizePerTuple));
+            if (isNotDelete) keys.emplace_back(d, offset);
+        }
+        return MiniSQL::get_index_manager().create_index(table, index, keys);
+    } else
+        return false;
+}
 
 bool Api::drop_index(std::string& indexName) {
     try {
@@ -252,6 +323,7 @@ bool Api::drop_index(std::string& indexName) {
         std::cout << e.what() << std::endl;
         return false;
     }
+    // TODO
     return false;
 }
 

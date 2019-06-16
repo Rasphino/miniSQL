@@ -139,11 +139,11 @@ bool RM::RecordManager::verify_data(
 
 bool RM::RecordManager::get_ids_from_condition(
     std::string& tableName, std::string& colName, std::string& operand, std::string& cond, std::vector<int>& offsets) {
-    auto& t = MiniSQL::get_catalog_manager().get_table(tableName);
+    auto& table = MiniSQL::get_catalog_manager().get_table(tableName);
     uint32_t beginOffset = 0, endOffset = 0;
     DataType type;
 
-    for (const auto& field : t.fields) {
+    for (const auto& field : table.fields) {
         if (field.name == colName) {
             endOffset = beginOffset + field.N;
             type = field.type;
@@ -152,7 +152,7 @@ bool RM::RecordManager::get_ids_from_condition(
         beginOffset += field.N;
     }
     if (endOffset == 0) {
-        std::cout << "ERROR: [RecordManager::delete_record] colName " << colName << "not found!" << std::endl;
+        std::cout << "ERROR: [RecordManager::get_ids_from_condition] colName " << colName << "not found!" << std::endl;
         return false;
     }
 
