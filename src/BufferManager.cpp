@@ -122,7 +122,7 @@ bool BM::BufferManager::save(size_t idx) {
     int fd = open(tables[idx]->name.c_str(), O_WRONLY, S_IWRITE | S_IREAD);
 #endif
 #ifdef WIN32
-    int fd = open(tables[idx]->name.c_str(), O_WRONLY);
+    int fd = _open(tables[idx]->name.c_str(), O_WRONLY);
 #endif
     if (fd == -1) return false;
     lseek(fd, buf[idx].beginOffset * (tables[idx]->sizePerTuple + RECORD_TAIL_SIZE), SEEK_SET);
@@ -286,7 +286,7 @@ bool BM::BufferManager::create_table(std::string& tableName) {
     int fd = open(tableName.c_str(), O_CREAT, mode);
 #endif
 #ifdef WIN32
-    int fd = open(tableName.c_str(), O_CREAT);
+    int fd = _open(tableName.c_str(), _O_CREAT);
 #endif
 
     close(fd);
