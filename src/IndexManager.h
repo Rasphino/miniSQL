@@ -31,14 +31,14 @@ namespace IM {
         Tree->print(OF);
         OF.close();
         // create file
-        return false;
+        return true;
     }
 
     inline bool IndexManager::delete_index(CM::index& indexInfo) {
         std::string fileName = indexInfo.onTableName + "-" + indexInfo.name;
         std::remove(fileName.c_str());
         // delete file
-        return false;
+        return true;
     }
 
     inline bool IndexManager::insert_key(CM::index& indexInfo, std::string& _key, int id) {
@@ -50,7 +50,7 @@ namespace IM {
         TY >> type;
         TY.close();
         if (type == 0) {
-            BTree<int>*P = new BTree<int>();
+            BTree<int>* P = new BTree<int>();
             P->build(fileName);
             int key = std::stoi(_key);
             P->insert_key(key, id);
@@ -77,7 +77,7 @@ namespace IM {
             OF.close();
         } else {
             return false;
-		}
+        }
         return true;
     }
 
@@ -90,7 +90,7 @@ namespace IM {
         TY >> type;
         TY.close();
         if (type == 0) {
-            BTree<int>*P = new BTree<int>();
+            BTree<int>* P = new BTree<int>();
             P->build(fileName);
             int key = std::stoi(_key);
             P->Delete(key, id);

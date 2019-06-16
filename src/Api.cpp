@@ -238,8 +238,8 @@ bool Api::create_table(std::string& tableName,
     //
     // create table for index manager
     //
-    std::string indexName = tableName + "_PK";
-    create_index(indexName, tableName, primaryKey);
+    //    std::string indexName = tableName + "_PK";
+    //    create_index(indexName, tableName, primaryKey);
 
     return true;
 }
